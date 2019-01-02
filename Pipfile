@@ -1,0 +1,19 @@
+[requires]
+python_version = '3.6'
+
+[dev-packages]
+flake8 = "*"
+isort = "*"
+
+[packages]
+Pillow = "*"
+PyInquirer = "*"
+SQLAlchemy = "*"
+console-menu = "*"
+exifread = "*"
+gpsphoto = "*"
+piexif = "*"
+pytz = "*"
+pyxdg = "*"
+tabulate = "*"
+sqlalchemy-migrate = "*"

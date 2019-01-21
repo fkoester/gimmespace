@@ -413,7 +413,7 @@ def report_incident(incident):
 
 
 def manage_incidents_menu():
-    incidents = session.query(Incident)
+    incidents = session.query(Incident).order_by(Incident.time.desc())
     choice = prompt({
         'type': 'list',
         'name': 'item',
@@ -572,7 +572,9 @@ def incident_menu(incident):
 
 
 def photo_menu(photo):
-    unreported_incidents = session.query(Incident).filter_by(reported_at=None)
+    unreported_incidents = (session.query(Incident)
+                            .filter_by(reported_at=None)
+                            .order_by(Incident.time.desc()))
     choices = [{
         'name': 'Create new Incident',
         'value': 'new_incident',

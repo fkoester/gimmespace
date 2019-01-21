@@ -561,6 +561,9 @@ def incident_menu(incident):
         }, {
             'name': 'Next',
             'value': 'next',
+        }, {
+            'name': 'Main Menu',
+            'value': 'main_menu',
         }]
     })['item']
     if choice == 'location':
@@ -569,6 +572,8 @@ def incident_menu(incident):
         incident_car_menu(incident)
     if choice == 'violation_type':
         incident_violation_type_menu(incident)
+    if choice == 'main_menu':
+        main_menu()
 
 
 def photo_menu(photo):

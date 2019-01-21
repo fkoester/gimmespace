@@ -734,6 +734,8 @@ def import_photos():
                                           stderr=subprocess.DEVNULL)
         photo_menu(photo)
 
+    main_menu()
+
 
 def main_menu():
     choice = prompt({

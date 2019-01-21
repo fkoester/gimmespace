@@ -248,10 +248,12 @@ def manage_violation_types_menu():
             'type': 'input',
             'name': 'short_name',
             'message': 'Short Name',
+            'default': violation_type.short_name,
         }, {
             'type': 'input',
             'name': 'full_name',
             'message': 'Full Name',
+            'default': violation_type.full_name,
         }]
         answers = prompt(questions)
         violation_type.short_name = answers['short_name']

@@ -529,8 +529,7 @@ def incident_violation_type_menu(incident):
         violation_type = ViolationType(**answers)
         session.add(violation_type)
 
-    # TODO Support for multiple violations
-    incident.violations = [violation_type]
+    incident.violations.append(violation_type)
     session.commit()
     incident_menu(incident)
 

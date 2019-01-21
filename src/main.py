@@ -408,6 +408,9 @@ def report_incident(incident):
     mailer.sendmail(sender_config['email'], [authority_config['email'], sender_config['email']],
                     msg_root.as_string())
 
+    incident.reported_at = datetime.now()
+    session.commit()
+
 
 def manage_incidents_menu():
     incidents = session.query(Incident)

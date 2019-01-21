@@ -199,14 +199,26 @@ def manage_violation_types_menu():
         'type': 'list',
         'name': 'item',
         'message': 'Manage Violation Types menu',
-        'choices': ['List Violation Types', 'Add new violation type', 'back']
+        'choices': [{
+            'name': 'List Violation Types',
+            'value': 'list'
+        }, {
+            'name': 'Add new Violation Ttype',
+            'value': 'add',
+        }, {
+            'name': 'Edit Violation Type',
+            'value': 'edit'
+        }, {
+            'name': 'Back',
+            'value': 'back',
+        }]
     })['item']
-    if choice == 'List Violation Types':
+    if choice == 'list':
         print(tabulate([[v.short_name, len(v.incidents)] for v in session.query(ViolationType)],
                        headers=['Name', '# Incidents']))
         manage_violation_types_menu()
 
-    if choice == 'Add new violation type':
+    if choice == 'add':
         questions = [{
             'type': 'input',
             'name': 'short_name',
@@ -220,6 +232,32 @@ def manage_violation_types_menu():
         violation_type = ViolationType(**answers)
         session.add(violation_type)
         session.commit()
+        manage_violation_types_menu()
+
+    if choice == 'edit':
+        violation_type = prompt({
+            'type': 'list',
+            'name': 'violation_type',
+            'message': 'Violation Type',
+            'choices': [{
+                'name': v.short_name,
+                'value': v,
+            } for v in session.query(ViolationType)]
+        })['violation_type']
+        questions = [{
+            'type': 'input',
+            'name': 'short_name',
+            'message': 'Short Name',
+        }, {
+            'type': 'input',
+            'name': 'full_name',
+            'message': 'Full Name',
+        }]
+        answers = prompt(questions)
+        violation_type.short_name = answers['short_name']
+        violation_type.full_name = answers['full_name']
+        session.commit()
+
         manage_violation_types_menu()
 
     if choice == 'back':

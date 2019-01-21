@@ -326,9 +326,9 @@ def manage_locations_menu():
         'choices': ['List Locations', 'Add new Location', 'back']
     })['item']
     if choice == 'List Locations':
-        print(tabulate([[l.latitude, l.longitude, l.name, l.street]
+        print(tabulate([[l.latitude, l.longitude, l.name, l.street, len(l.incidents)]
                         for l in session.query(Location)],
-                       headers=['Lat', 'Lon', 'Name', 'Street']))
+                       headers=['Lat', 'Lon', 'Name', 'Street', '# Incidents']))
         manage_locations_menu()
     if choice == 'Add new Location':
         add_location_menu()

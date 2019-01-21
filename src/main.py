@@ -369,6 +369,7 @@ def report_incident(incident):
         'sender_name': sender_config['name'],
         'sender_address1': sender_config['address1'],
         'sender_address2': sender_config['address2'],
+        'sender_phone': sender_config['phone'],
     })
 
     with open(os.path.join(reports_path, 'message.txt'), 'w') as message_file:

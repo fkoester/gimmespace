@@ -325,16 +325,56 @@ def manage_locations_menu():
         'type': 'list',
         'name': 'item',
         'message': 'Manage Locations menu',
-        'choices': ['List Locations', 'Add new Location', 'back']
+        'choices': [{
+            'name': 'List Locations',
+            'value': 'list',
+        }, {
+            'name': 'Add new Location',
+            'value': 'add',
+        }, {
+            'name': 'Edit Location',
+            'value': 'edit',
+        }, {
+            'name': 'Back',
+            'value': 'back'
+        }]
     })['item']
-    if choice == 'List Locations':
+    if choice == 'list':
         print(tabulate([[l.latitude, l.longitude, l.name, l.street, len(l.incidents)]
                         for l in session.query(Location)],
                        headers=['Lat', 'Lon', 'Name', 'Street', '# Incidents']))
         manage_locations_menu()
-    if choice == 'Add new Location':
+    if choice == 'add':
         add_location_menu()
         manage_locations_menu()
+
+    if choice == 'edit':
+        location = prompt({
+            'type': 'list',
+            'name': 'location',
+            'message': 'Location',
+            'choices': [{
+                'name': l.name,
+                'value': l,
+            } for l in session.query(Location)]
+        })['location']
+        questions = [{
+            'type': 'input',
+            'name': 'name',
+            'message': 'Name',
+            'default': location.name,
+        }, {
+            'type': 'input',
+            'name': 'description',
+            'message': 'Description',
+            'default': location.description,
+        }]
+        answers = prompt(questions)
+        location.name = answers['name']
+        location.description = answers['description']
+        session.commit()
+
+        manage_violation_types_menu()
 
     if choice == 'back':
         main_menu()

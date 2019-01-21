@@ -354,7 +354,7 @@ def report_incident(incident):
         template = Template(template_file.read())
 
     msg = template.substitute({
-        'violation_type': incident.violations[0].full_name,
+        'violation_type': ', '.join(v.full_name for v in incident.violations),
         'incident_comment': '\n{}\n'.format(incident.comment) if incident.comment else '',
         'incident_datetime': incident.time.astimezone(timezone).strftime('%d.%m.%Y %H:%M'),
         'street': incident.location.street,

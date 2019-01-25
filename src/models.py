@@ -74,6 +74,7 @@ class Incident(Base):
     time = Column(DateTime)
     photos = relationship('Photo', backref='incident')
     reported_at = Column(DateTime)
+    ignore = Column(Boolean, default=False)
     comment = Column(String)
     violations = relationship('ViolationType',
                               secondary=Table('violation_types_incidents', Base.metadata,

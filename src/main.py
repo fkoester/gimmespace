@@ -467,6 +467,9 @@ def manage_incidents_menu():
             'name': 'Report Incident',
             'value': 'report_incident',
         }, {
+            'name': 'Edit Incident',
+            'value': 'edit_incident',
+        }, {
             'name': 'Back',
             'value': 'back'
         }]
@@ -496,6 +499,21 @@ def manage_incidents_menu():
             } for i in incidents.filter_by(reported_at=None)]
         })['incident']
         report_incident(incident)
+
+    if choice == 'edit_incident':
+        incident = prompt({
+            'type': 'list',
+            'name': 'incident',
+            'message': 'Incident',
+            'choices': [{
+                'name': '{} {} {}'.format(i.time and i.time.astimezone(timezone),
+                                          i.location and i.location.name,
+                                          i.car and i.car.license_plate),
+                'value': i,
+            } for i in incidents.filter_by(reported_at=None)]
+        })['incident']
+        incident_menu(incident)
+        manage_incidents_menu()
 
     if choice == 'back':
         main_menu()

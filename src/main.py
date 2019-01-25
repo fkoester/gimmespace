@@ -20,6 +20,7 @@ import PIL.Image
 import pytz
 from GPSPhoto import gpsphoto
 from PyInquirer import prompt
+from sqlalchemy import and_, or_
 from tabulate import tabulate
 from xdg.BaseDirectory import xdg_config_home
 
@@ -496,7 +497,9 @@ def manage_incidents_menu():
                                           i.location and i.location.name,
                                           i.car and i.car.license_plate),
                 'value': i,
-            } for i in incidents.filter_by(reported_at=None)]
+            } for i in incidents.filter(and_(Incident.reported_at.is_(None),
+                                             or_(Incident.ignore.is_(False),
+                                                 Incident.ignore.is_(None))))]
         })['incident']
         report_incident(incident)
 
@@ -622,6 +625,9 @@ def incident_menu(incident):
             'name': 'Next',
             'value': 'next',
         }, {
+            'name': 'Ignore: {}'.format('Yes' if incident.ignore else 'No'),
+            'value': 'ignore',
+        }, {
             'name': 'Main Menu',
             'value': 'main_menu',
         }]
@@ -632,6 +638,9 @@ def incident_menu(incident):
         incident_car_menu(incident)
     if choice == 'violation_type':
         incident_violation_type_menu(incident)
+    if choice == 'ignore':
+        incident.ignore = not incident.ignore
+        session.commit()
     if choice == 'main_menu':
         main_menu()
 

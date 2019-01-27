@@ -341,9 +341,9 @@ def manage_locations_menu():
         }]
     })['item']
     if choice == 'list':
-        print(tabulate([[l.latitude, l.longitude, l.name, l.street, len(l.incidents)]
+        print(tabulate([[l.latitude, l.longitude, l.name, l.street, l.housenumber, len(l.incidents)]
                         for l in session.query(Location)],
-                       headers=['Lat', 'Lon', 'Name', 'Street', '# Incidents']))
+                       headers=['Lat', 'Lon', 'Name', 'Street', 'Nr', '# Incidents']))
         manage_locations_menu()
     if choice == 'add':
         add_location_menu()
@@ -503,6 +503,7 @@ def manage_incidents_menu():
                                                  Incident.ignore.is_(None))))]
         })['incident']
         report_incident(incident)
+        manage_incidents_menu()
 
     if choice == 'edit_incident':
         incident = prompt({
@@ -598,7 +599,10 @@ def incident_violation_type_menu(incident):
         violation_type = ViolationType(**answers)
         session.add(violation_type)
 
-    incident.violations.append(violation_type)
+    if violation_type in incident.violations:
+        incident.violations.remove(violation_type)
+    else:
+        incident.violations.append(violation_type)
     session.commit()
     incident_menu(incident)
 
@@ -608,7 +612,7 @@ def incident_menu(incident):
     if len(incident.violations) == 1:
         violation_type_label = incident.violations[0].short_name
     elif len(incident.violations) > 1:
-        violation_type_label = str(len(incident.violations))
+        violation_type_label = ', '.join([v.short_name for v in incident.violations])
 
     choice = prompt({
         'type': 'list',
@@ -619,7 +623,10 @@ def incident_menu(incident):
                 incident.location and incident.location.name or '<None>'),
             'value': 'location',
         }, {
-            'name': 'Car: {}'.format(incident.car and incident.car.license_plate or '<None>'),
+            'name': 'Car: {}'.format(incident.car and ', '.join([incident.car.license_plate,
+                                                                 incident.car.brand.name,
+                                                                 incident.car.color.name])
+                                     or '<None>'),
             'value': 'car',
         }, {
             'name': 'Violation Type: {}'.format(violation_type_label),
@@ -634,6 +641,9 @@ def incident_menu(incident):
             'name': 'Ignore: {}'.format('Yes' if incident.ignore else 'No'),
             'value': 'ignore',
         }, {
+            'name': 'Report',
+            'value': 'report',
+        }, {
             'name': 'Main Menu',
             'value': 'main_menu',
         }]
@@ -646,6 +656,9 @@ def incident_menu(incident):
         incident_violation_type_menu(incident)
     if choice == 'photos':
         incident_photos_menu(incident)
+    if choice == 'report':
+        report_incident(incident)
+        manage_incidents_menu()
     if choice == 'ignore':
         incident.ignore = not incident.ignore
         session.commit()

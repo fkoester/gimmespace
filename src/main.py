@@ -481,10 +481,11 @@ def manage_incidents_menu():
                          i.car and i.car.license_plate,
                          len(i.violations),
                          len(i.photos),
-                         i.reported_at and i.reported_at.astimezone(timezone) or 'No']
+                         i.reported_at and i.reported_at.astimezone(timezone) or 'No',
+                         i.ignore and 'Yes' or 'No']
                         for i in incidents],
                        headers=['ID', 'Time', 'Location', 'Car', '# Violations', '# Photos',
-                                'Reported']))
+                                'Reported', 'Ignore']))
         manage_incidents_menu()
 
     if choice == 'report_incident':
@@ -509,12 +510,14 @@ def manage_incidents_menu():
             'name': 'incident',
             'message': 'Incident',
             'choices': [{
-                'name': '{} {} {}'.format(i.time and i.time.astimezone(timezone),
-                                          i.location and i.location.name,
-                                          i.car and i.car.license_plate),
+                'name': '{} {} {} {}'.format(i.time and i.time.astimezone(timezone),
+                                             i.location and i.location.name,
+                                             i.car and i.car.license_plate,
+                                             i.ignore and '(Ignored)' or ''),
                 'value': i,
             } for i in incidents.filter_by(reported_at=None)]
         })['incident']
+        open_incident_photos(incident)
         incident_menu(incident)
         manage_incidents_menu()
 
@@ -622,6 +625,9 @@ def incident_menu(incident):
             'name': 'Violation Type: {}'.format(violation_type_label),
             'value': 'violation_type',
         }, {
+            'name': 'Photos: {}'.format(len(incident.photos) or 'None'),
+            'value': 'photos',
+        }, {
             'name': 'Next',
             'value': 'next',
         }, {
@@ -638,11 +644,32 @@ def incident_menu(incident):
         incident_car_menu(incident)
     if choice == 'violation_type':
         incident_violation_type_menu(incident)
+    if choice == 'photos':
+        incident_photos_menu(incident)
     if choice == 'ignore':
         incident.ignore = not incident.ignore
         session.commit()
     if choice == 'main_menu':
         main_menu()
+
+
+def incident_photos_menu(incident):
+    photo = prompt({
+        'type': 'list',
+        'name': 'photo',
+        'message': 'Remove photo',
+        'choices': [{
+            'name': '{}'.format(p.filename),
+            'value': p,
+        } for p in incident.photos] + [{
+            'name': 'Cancel',
+            'value': 'cancel',
+        }]
+    })['photo']
+
+    if photo != 'cancel':
+        incident.photos.remove(photo)
+        session.commit()
 
 
 def photo_menu(photo):
@@ -688,8 +715,9 @@ def photo_menu(photo):
             'name': 'incident',
             'message': 'Previous Incidents',
             'choices': [{
-                'name': '{} {} {}'.format(i.time and i.time.astimezone(timezone), i.location.name,
-                                          i.car.license_plate),
+                'name': '{} {} {}'.format(i.time and i.time.astimezone(timezone),
+                                          i.location and i.location.name,
+                                          i.car and i.car.license_plate),
                 'value': i,
             } for i in unreported_incidents]
         })['incident']
@@ -745,6 +773,14 @@ def unprocessed_photos():
             session.commit()
 
     return photos
+
+
+def open_incident_photos(incident):
+    for photo in incident.photos:
+        subprocess.Popen(['geeqie', '--without-tools',
+                          os.path.join(photo.dirpath, photo.filename)],
+                         stdout=subprocess.DEVNULL,
+                         stderr=subprocess.DEVNULL)
 
 
 def import_photos():

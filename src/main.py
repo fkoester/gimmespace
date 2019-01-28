@@ -369,16 +369,65 @@ def manage_locations_menu():
             'name': 'description',
             'message': 'Description',
             'default': location.description,
+        }, {
+            'type': 'input',
+            'name': 'postcode',
+            'message': 'Postcode',
+            'default': location.postcode,
+        }, {
+            'type': 'input',
+            'name': 'street',
+            'message': 'Street',
+            'default': location.street,
+        }, {
+            'type': 'input',
+            'name': 'housenumber',
+            'message': 'Housenumber',
+            'default': location.housenumber,
         }]
         answers = prompt(questions)
         location.name = answers['name']
         location.description = answers['description']
+        location.postcode = answers['postcode']
+        location.street = answers['street']
+        location.housenumber = answers['housenumber']
         session.commit()
 
-        manage_violation_types_menu()
+        manage_locations_menu()
 
     if choice == 'back':
         main_menu()
+
+
+def incident_report(incident):
+    email_config = config['EMAIL']
+    authority_config = config['AUTHORITY']
+    sender_config = config['SENDER']
+
+    with open(email_config['template_file']) as template_file:
+        template = Template(template_file.read())
+        return template.substitute({
+            'violation_type': ', '.join(v.full_name for v in incident.violations),
+            'incident_comment': '\n{}\n'.format(incident.comment) if incident.comment else '',
+            'incident_datetime': incident.time.astimezone(timezone).strftime('%d.%m.%Y %H:%M'),
+            'street': incident.location.street,
+            'housenumber': incident.location.housenumber,
+            'postcode': incident.location.postcode,
+            'city': authority_config['city'],
+            'location_description': '\n{}\n'.format(incident.location.description)
+                                    if incident.location.description else '',
+            'car_brand': incident.car.brand.name,
+            'car_color': incident.car.color.name,
+            'car_license_plate': incident.car.license_plate,
+            'sender_name': sender_config['name'],
+            'sender_address1': sender_config['address1'],
+            'sender_address2': sender_config['address2'],
+            'sender_phone': sender_config['phone'],
+        })
+
+
+def incident_report_preview(incident):
+    print(incident_report(incident))
 
 
 def report_incident(incident):
@@ -393,27 +442,7 @@ def report_incident(incident):
 
     os.makedirs(reports_path, exist_ok=True)
 
-    with open(email_config['template_file']) as template_file:
-        template = Template(template_file.read())
-
-    msg = template.substitute({
-        'violation_type': ', '.join(v.full_name for v in incident.violations),
-        'incident_comment': '\n{}\n'.format(incident.comment) if incident.comment else '',
-        'incident_datetime': incident.time.astimezone(timezone).strftime('%d.%m.%Y %H:%M'),
-        'street': incident.location.street,
-        'housenumber': incident.location.housenumber,
-        'postcode': incident.location.postcode,
-        'city': authority_config['city'],
-        'location_description': '\n{}\n'.format(incident.location.description)
-                                if incident.location.description else '',
-        'car_brand': incident.car.brand.name,
-        'car_color': incident.car.color.name,
-        'car_license_plate': incident.car.license_plate,
-        'sender_name': sender_config['name'],
-        'sender_address1': sender_config['address1'],
-        'sender_address2': sender_config['address2'],
-        'sender_phone': sender_config['phone'],
-    })
+    msg = incident_report(incident)
 
     with open(os.path.join(reports_path, 'message.txt'), 'w') as message_file:
         message_file.write(msg)
@@ -502,7 +531,19 @@ def manage_incidents_menu():
                                              or_(Incident.ignore.is_(False),
                                                  Incident.ignore.is_(None))))]
         })['incident']
-        report_incident(incident)
+        incident_report_preview(incident)
+        open_incident_photos(incident)
+
+        confirm = prompt({
+            'type': 'confirm',
+            'message': 'Do you want to report that incident?',
+            'name': 'continue',
+            'default': False,
+        })['continue']
+
+        if confirm:
+            report_incident(incident)
+
         manage_incidents_menu()
 
     if choice == 'edit_incident':

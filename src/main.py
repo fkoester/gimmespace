@@ -676,14 +676,17 @@ def incident_menu(incident):
             'name': 'Photos: {}'.format(len(incident.photos) or 'None'),
             'value': 'photos',
         }, {
-            'name': 'Next',
-            'value': 'next',
-        }, {
             'name': 'Ignore: {}'.format('Yes' if incident.ignore else 'No'),
             'value': 'ignore',
         }, {
+            'name': 'Next',
+            'value': 'next',
+        }, {
             'name': 'Report',
             'value': 'report',
+        }, {
+            'name': 'Delete',
+            'value': 'delete',
         }, {
             'name': 'Main Menu',
             'value': 'main_menu',
@@ -697,11 +700,14 @@ def incident_menu(incident):
         incident_violation_type_menu(incident)
     if choice == 'photos':
         incident_photos_menu(incident)
+    if choice == 'ignore':
+        incident.ignore = not incident.ignore
+        session.commit()
     if choice == 'report':
         report_incident(incident)
         manage_incidents_menu()
-    if choice == 'ignore':
-        incident.ignore = not incident.ignore
+    if choice == 'delete':
+        session.delete(incident)
         session.commit()
     if choice == 'main_menu':
         main_menu()

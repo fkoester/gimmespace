@@ -241,7 +241,7 @@ def manage_violation_types_menu():
             'name': 'violation_type',
             'message': 'Violation Type',
             'choices': [{
-                'name': v.short_name,
+                'name': v.short_name or '',
                 'value': v,
             } for v in session.query(ViolationType)]
         })['violation_type']
@@ -249,12 +249,12 @@ def manage_violation_types_menu():
             'type': 'input',
             'name': 'short_name',
             'message': 'Short Name',
-            'default': violation_type.short_name,
+            'default': violation_type.short_name or '',
         }, {
             'type': 'input',
             'name': 'full_name',
             'message': 'Full Name',
-            'default': violation_type.full_name,
+            'default': violation_type.full_name or '',
         }]
         answers = prompt(questions)
         violation_type.short_name = answers['short_name']

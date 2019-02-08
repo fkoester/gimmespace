@@ -173,22 +173,111 @@ def manage_cars_menu():
         'type': 'list',
         'name': 'item',
         'message': 'Manage Cars menu',
-        'choices': ['List Cars', 'Add new Car', 'Manage Car Brands', 'Manage Car Colors', 'back']
+        'choices': [{
+            'name': 'List Cars',
+            'value': 'list_cars',
+        }, {
+            'name': 'Add new Car',
+            'value': 'add_car',
+        }, {
+            'name': 'Edit Car',
+            'value': 'edit_car',
+        }, {
+            'name': 'Manage Car Brands',
+            'value': 'manage_car_brands',
+        }, {
+            'name': 'Manage Car Colors',
+            'value': 'manage_car_colors',
+        }, {
+            'name': 'Back',
+            'value': 'back'
+        }]
     })['item']
-    if choice == 'List Cars':
+    if choice == 'list_cars':
         print(tabulate([[c.license_plate, c.brand.name, c.color.name, len(c.incidents)]
                         for c in session.query(Car)],
                        headers=['License Plate', 'Brand', 'Color', '# Incidents']))
         manage_cars_menu()
 
-    if choice == 'Add new Car':
+    if choice == 'add_car':
         add_car_menu()
         manage_cars_menu()
 
-    if choice == 'Manage Car Brands':
+    if choice == 'edit_car':
+        car = prompt({
+            'type': 'list',
+            'name': 'car',
+            'message': 'Car',
+            'choices': [{
+                'name': c.license_plate,
+                'value': c,
+            } for c in session.query(Car)]
+        })['car']
+        choice = prompt({
+            'type': 'list',
+            'name': 'item',
+            'message': 'Edit {}'.format(car.license_plate),
+            'choices': [{
+                'name': 'Color: {}'.format(car.color and car.color.name or '<None>'),
+                'value': 'color',
+            }, {
+                'name': 'Brand: {}'.format(car.brand and car.brand.name or '<None>'),
+                'value': 'brand',
+            }]
+        })['item']
+        if choice == 'color':
+            car_colors = session.query(CarColor)
+            car_color = None
+            car_color_name = prompt({
+                'type': 'list',
+                'name': 'car_color',
+                'message': 'Car Color',
+                'choices': [c.name for c in car_colors] + ['[Enter new]'],
+            })['car_color']
+            if car_color_name != '[Enter new]':
+                car_color = session.query(CarColor).filter_by(name=car_color_name).one_or_none()
+
+            if not car_color:
+                car_color_name = prompt({
+                    'type': 'input',
+                    'name': 'car_color',
+                    'message': 'Car Color',
+                })['car_color']
+                car_color = CarColor(name=car_color_name)
+                session.commit()
+
+            car.color = car_color
+        elif choice == 'brand':
+            car_brands = session.query(CarBrand)
+            car_brand = None
+            car_brand_name = prompt({
+                'type': 'list',
+                'name': 'car_brand',
+                'message': 'Car Brand',
+                'choices': [b.name for b in car_brands] + ['[Enter new]'],
+            })['car_brand']
+            if car_brand_name != '[Enter new]':
+                car_brand = session.query(CarBrand).filter_by(name=car_brand_name).one_or_none()
+
+            if not car_brand:
+                car_brand_name = prompt({
+                    'type': 'input',
+                    'name': 'car_brand',
+                    'message': 'Car Brand',
+                })['car_brand']
+                car_brand = CarBrand(name=car_brand_name)
+                session.commit()
+
+            car.brand = car_brand
+
+        session.commit()
+
+        manage_cars_menu()
+
+    if choice == 'manage_car_brands':
         manage_car_brands_menu()
 
-    if choice == 'Manage Car Colors':
+    if choice == 'manage_car_colors':
         manage_car_colors_menu()
 
     if choice == 'back':

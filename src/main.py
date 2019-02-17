@@ -909,7 +909,7 @@ def unprocessed_photos():
             longitude = gpsdata.get('Longitude')
 
             if not photo:
-                timestamp = timezone.localize(datetime.strptime(exif['DateTime'],
+                timestamp = timezone.localize(datetime.strptime(exif['DateTimeOriginal'],
                                                                 '%Y:%m:%d %H:%M:%S'))
                 photo = Photo(filename=filename,
                               dirpath=dirpath,

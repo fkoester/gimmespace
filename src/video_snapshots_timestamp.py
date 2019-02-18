@@ -145,5 +145,5 @@ for (dirpath, dirnames, filenames) in walk(snapshots_dir):
                                        '{:02d}'.format(snapshot_datetime.year),
                                        '{:02d}'.format(snapshot_datetime.month),
                                        filename)
-
-            img.save(output_path, 'jpeg', exif=exif_bytes)
+            if not os.path.isfile(output_path):
+                img.save(output_path, 'jpeg', exif=exif_bytes)

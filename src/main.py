@@ -1,6 +1,7 @@
 #! /usr/bin/env python
 
 import configparser
+import hashlib
 import os.path
 import smtplib
 import subprocess
@@ -541,10 +542,13 @@ def report_incident(incident):
         in_file_path = os.path.join(photo.dirpath, photo.filename)
         out_file_path = os.path.join(reports_path, photo.filename)
         img = PIL.Image.open(in_file_path)
-        size = img.size
-        new_size = (int(size[0] * scale_image), int(size[1] * scale_image))
-        resized_img = img.resize(new_size, resample=PIL.Image.LANCZOS)
-        resized_img.save(out_file_path, 'JPEG')
+
+        if 'vlcsnap' not in photo.filename:
+            size = img.size
+            new_size = (int(size[0] * scale_image), int(size[1] * scale_image))
+            img = img.resize(new_size, resample=PIL.Image.LANCZOS)
+
+        img.save(out_file_path, 'JPEG')
 
     mailer = smtplib.SMTP_SSL(email_config['host'], port=email_config.getint('port'))
     mailer.login(email_config['username'], email_config['password'])
@@ -563,7 +567,11 @@ def report_incident(incident):
         prt = MIMEBase('application', 'octet-stream')
         prt.set_payload(open(file_path, 'rb').read())
         encoders.encode_base64(prt)
-        prt.add_header('Content-Disposition', 'attachment; filename="{}"'.format(photo.filename))
+        name_parts = os.path.splitext(photo.filename)
+        basename_hash = hashlib.md5(name_parts[0].encode('utf-8')).hexdigest()
+        photo_email_filename = basename_hash + name_parts[1]
+        prt.add_header('Content-Disposition', 'attachment; filename="{}"'.format(
+            photo_email_filename))
         msg_root.attach(prt)
 
     mailer.sendmail(sender_config['email'], [authority_config['email'], sender_config['email']],

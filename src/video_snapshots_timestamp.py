@@ -1,19 +1,19 @@
 #! /usr/bin/env python
 
 import configparser
+import json
 import os.path
+import re
 import sys
 from datetime import datetime, timedelta
-from os import walk
-import re
-import json
 from fractions import Fraction
+from os import walk
+from subprocess import call, check_output
 
-from PIL import Image, ImageDraw, ImageFont
-import pytz
-from xdg.BaseDirectory import xdg_config_home
 import piexif
-
+import pytz
+from PIL import Image, ImageDraw, ImageFont
+from xdg.BaseDirectory import xdg_config_home
 
 config_path = os.path.join(xdg_config_home, 'gimmespace', 'config.ini')
 config = configparser.ConfigParser()
@@ -23,6 +23,7 @@ video_metadata_dir = config['VIDEOS']['video_metadata_dir']
 photos_dir = config['MAIN']['photos_dir']
 watermark_font = config['VIDEOS']['watermark_font']
 timezone = pytz.timezone(config['MAIN']['timezone'])
+script_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 def to_deg(value, loc):
@@ -71,6 +72,10 @@ def find_closest_trackpoint(trackpoints, snapshot_datetime):
     return closest_trackpoint
 
 
+returncode = call(os.path.join(script_dir, '../extract.sh'))
+if returncode != 0:
+    sys.exit(1)
+
 for (dirpath, dirnames, filenames) in walk(snapshots_dir):
     for filename in filenames:
         filepath = os.path.join(dirpath, filename)
@@ -78,6 +83,7 @@ for (dirpath, dirnames, filenames) in walk(snapshots_dir):
         img = Image.open(filepath)
         m = re.search('^vlcsnap\-(.*?)\-(\d{2})_(\d{2})_(\d{2}).*$', filename)
         video_filename = m.group(1)
+        video_filepath = os.path.join(video_metadata_dir, video_filename)
         offset_hours = int(m.group(2))
         offset_minutes = int(m.group(3))
         offset_seconds = int(m.group(4))
@@ -85,17 +91,38 @@ for (dirpath, dirnames, filenames) in walk(snapshots_dir):
         json_filename = '{}.json'.format(os.path.splitext(video_filename)[0])
         json_filepath = os.path.join(video_metadata_dir, json_filename)
 
+        ffprobe_output = check_output(['/usr/bin/ffprobe',
+                                       '-v', 'quiet',
+                                       '-print_format', 'json',
+                                       '-show_format',
+                                       video_filepath])
+        video_metadata = json.loads(ffprobe_output)
+
+        creation_time_str = video_metadata['format']['tags']['creation_time']
+        # Although the creation_time string appears to be in UTC, apparently it is not.
+        # It is the local time one configures in the camera manually, without any timezone
+        # information.
+        start_datetime = timezone.localize(datetime.strptime(creation_time_str,
+                                                             '%Y-%m-%dT%H:%M:%S.%fZ'))
+        print('{} => {}'.format(creation_time_str, start_datetime.isoformat()))
+
+        snapshot_datetime = start_datetime + timedelta(hours=offset_hours,
+                                                       minutes=offset_minutes,
+                                                       seconds=offset_seconds)
+
+        exif_ifd = {
+            piexif.ExifIFD.DateTimeOriginal:
+                snapshot_datetime.strftime('%Y:%m:%d %H:%M:%S'),
+        }
+
+        exif_dict = {"Exif": exif_ifd}
+
         with open(json_filepath) as json_data:
             trackpoints = json.load(json_data)['data']
-            if not trackpoints:
-                print('No trackpoints')
-                sys.exit(1)
 
-            start_datetime = trackpoint_datetime(trackpoints[0])
-            snapshot_datetime = start_datetime + timedelta(hours=offset_hours,
-                                                           minutes=offset_minutes,
-                                                           seconds=offset_seconds)
-
+        if not trackpoints:
+            print('No trackpoints for file {}'.format(filename))
+        else:
             closest_trackpoint = find_closest_trackpoint(trackpoints, snapshot_datetime)
             lat = closest_trackpoint['lat']
             lon = closest_trackpoint['lon']
@@ -109,10 +136,6 @@ for (dirpath, dirnames, filenames) in walk(snapshots_dir):
                         change_to_rational(lng_deg[1]),
                         change_to_rational(lng_deg[2]))
 
-            exif_ifd = {
-                piexif.ExifIFD.DateTimeOriginal:
-                    snapshot_datetime.strftime('%Y:%m:%d %H:%M:%S'),
-            }
             gps_ifd = {
                 piexif.GPSIFD.GPSVersionID: (2, 0, 0, 0),
                 piexif.GPSIFD.GPSDateStamp:
@@ -122,28 +145,29 @@ for (dirpath, dirnames, filenames) in walk(snapshots_dir):
                 piexif.GPSIFD.GPSLongitudeRef: lng_deg[3],
                 piexif.GPSIFD.GPSLongitude: exiv_lng,
             }
-            exif_dict = {"Exif": exif_ifd, "GPS": gps_ifd}
-            exif_bytes = piexif.dump(exif_dict)
-            img = img.rotate(180)
+            exif_dict['GPS'] = gps_ifd
 
-            width, height = img.size
-            watermark_text = snapshot_datetime.strftime('%d.%m.%Y %H:%M:%S')
-            draw = ImageDraw.Draw(img)
+        exif_bytes = piexif.dump(exif_dict)
+        img = img.rotate(180)
 
-            font = ImageFont.truetype(watermark_font, 60)
-            textwidth, textheight = draw.textsize(watermark_text, font)
+        width, height = img.size
+        watermark_text = snapshot_datetime.strftime('%d.%m.%Y %H:%M:%S')
+        draw = ImageDraw.Draw(img)
 
-            # calculate the x,y coordinates of the text
-            margin = 5
-            x = width - textwidth - margin
-            y = height - textheight - margin
+        font = ImageFont.truetype(watermark_font, 60)
+        textwidth, textheight = draw.textsize(watermark_text, font)
 
-            # draw watermark in the bottom right corner
-            draw.text((x, y), watermark_text, font=font)
+        # calculate the x,y coordinates of the text
+        margin = 5
+        x = width - textwidth - margin
+        y = height - textheight - margin
 
-            output_path = os.path.join(photos_dir,
-                                       '{:02d}'.format(snapshot_datetime.year),
-                                       '{:02d}'.format(snapshot_datetime.month),
-                                       filename)
-            if not os.path.isfile(output_path):
-                img.save(output_path, 'jpeg', exif=exif_bytes)
+        # draw watermark in the bottom right corner
+        draw.text((x, y), watermark_text, font=font)
+
+        output_path = os.path.join(photos_dir,
+                                   '{:02d}'.format(snapshot_datetime.year),
+                                   '{:02d}'.format(snapshot_datetime.month),
+                                   filename)
+        if not os.path.isfile(output_path):
+            img.save(output_path, 'jpeg', exif=exif_bytes)

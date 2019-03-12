@@ -148,7 +148,7 @@ for (dirpath, dirnames, filenames) in walk(snapshots_dir):
             exif_dict['GPS'] = gps_ifd
 
         exif_bytes = piexif.dump(exif_dict)
-        img = img.rotate(180)
+        # img = img.rotate(180)
 
         width, height = img.size
         watermark_text = snapshot_datetime.strftime('%d.%m.%Y %H:%M:%S')

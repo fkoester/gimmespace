@@ -581,6 +581,26 @@ def report_incident(incident):
     session.commit()
 
 
+def manage_photos_menu():
+    photo = prompt({
+            'type': 'list',
+            'name': 'photo',
+            'message': 'Photo',
+            'choices': [{
+                'name': '{}{}'.format(p.filename, p.ignore and ' (Ignored)' or ''),
+                'value': p,
+            } for p in sorted(session.query(Photo), key=attrgetter('timestamp'), reverse=True)]
+        })['photo']
+    photo.ignore = not photo.ignore
+    session.commit()
+    if photo.ignore:
+        print('Photo is now ignored.')
+    else:
+        print('Photo is now unignored.')
+
+    main_menu()
+
+
 def manage_incidents_menu():
     incidents = session.query(Incident).order_by(Incident.time.desc())
     choice = prompt({
@@ -964,6 +984,7 @@ def main_menu():
         'message': 'Main menu',
         'choices': [
             'Import Photos',
+            'Manage Photos',
             'Manage Locations',
             'Manage Cars',
             'Manage Violation Types',
@@ -973,6 +994,8 @@ def main_menu():
     })['item']
     if choice == 'Import Photos':
         import_photos()
+    if choice == 'Manage Photos':
+        manage_photos_menu()
     if choice == 'Manage Locations':
         manage_locations_menu()
     if choice == 'Manage Cars':

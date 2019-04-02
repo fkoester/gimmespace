@@ -1,7 +1,7 @@
 #! /bin/bash
 set -e
 
-DIR="/run/media/fabian/gopro/Gopro"
+DIR="${1}"
 
 pushd "${DIR}"
 

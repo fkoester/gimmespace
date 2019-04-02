@@ -19,7 +19,7 @@ config_path = os.path.join(xdg_config_home, 'gimmespace', 'config.ini')
 config = configparser.ConfigParser()
 config.read(config_path)
 snapshots_dir = config['VIDEOS']['snapshots_dir']
-video_metadata_dir = config['VIDEOS']['video_metadata_dir']
+videos_dir = config['VIDEOS']['videos_dir']
 photos_dir = config['MAIN']['photos_dir']
 watermark_font = config['VIDEOS']['watermark_font']
 timezone = pytz.timezone(config['MAIN']['timezone'])
@@ -72,7 +72,7 @@ def find_closest_trackpoint(trackpoints, snapshot_datetime):
     return closest_trackpoint
 
 
-returncode = call(os.path.join(script_dir, '../extract.sh'))
+returncode = call([os.path.join(script_dir, '../extract.sh'), videos_dir])
 if returncode != 0:
     sys.exit(1)
 
@@ -83,13 +83,13 @@ for (dirpath, dirnames, filenames) in walk(snapshots_dir):
         img = Image.open(filepath)
         m = re.search('^vlcsnap\-(.*?)\-(\d{2})_(\d{2})_(\d{2}).*$', filename)
         video_filename = m.group(1)
-        video_filepath = os.path.join(video_metadata_dir, video_filename)
+        video_filepath = os.path.join(videos_dir, video_filename)
         offset_hours = int(m.group(2))
         offset_minutes = int(m.group(3))
         offset_seconds = int(m.group(4))
 
         json_filename = '{}.json'.format(os.path.splitext(video_filename)[0])
-        json_filepath = os.path.join(video_metadata_dir, json_filename)
+        json_filepath = os.path.join(videos_dir, json_filename)
 
         ffprobe_output = check_output(['/usr/bin/ffprobe',
                                        '-v', 'quiet',

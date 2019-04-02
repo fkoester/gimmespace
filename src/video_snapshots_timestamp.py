@@ -3,6 +3,7 @@
 import configparser
 import json
 import os.path
+from pathlib import Path
 import re
 import sys
 from datetime import datetime, timedelta
@@ -165,9 +166,11 @@ for (dirpath, dirnames, filenames) in walk(snapshots_dir):
         # draw watermark in the bottom right corner
         draw.text((x, y), watermark_text, font=font)
 
-        output_path = os.path.join(photos_dir,
-                                   '{:02d}'.format(snapshot_datetime.year),
-                                   '{:02d}'.format(snapshot_datetime.month),
-                                   filename)
-        if not os.path.isfile(output_path):
+        output_path = Path(photos_dir,
+                           '{:02d}'.format(snapshot_datetime.year),
+                           '{:02d}'.format(snapshot_datetime.month),
+                           filename)
+
+        if not output_path.is_file():
+            output_path.parent.mkdir(parents=True, exist_ok=True)
             img.save(output_path, 'jpeg', exif=exif_bytes)

@@ -123,7 +123,8 @@ def add_car_menu(incident=None, license_plate=None):
             'type': 'list',
             'name': 'car_brand',
             'message': 'Car Brand',
-            'choices': [b.name for b in car_brands] + ['[Enter new]'],
+            'choices': [b.name for b in
+                        sorted(car_brands, key=attrgetter('name'))] + ['[Enter new]'],
         })['car_brand']
         if car_brand_name != '[Enter new]':
             car_brand = session.query(CarBrand).filter_by(name=car_brand_name).one_or_none()
@@ -144,7 +145,8 @@ def add_car_menu(incident=None, license_plate=None):
             'type': 'list',
             'name': 'car_color',
             'message': 'Car Color',
-            'choices': [c.name for c in car_colors] + ['[Enter new]'],
+            'choices': [c.name for c in
+                        sorted(car_colors, key=attrgetter('name'))] + ['[Enter new]'],
         })['car_color']
         if car_color_name != '[Enter new]':
             car_color = session.query(CarColor).filter_by(name=car_color_name).one_or_none()
@@ -447,7 +449,7 @@ def manage_locations_menu():
             'choices': [{
                 'name': l.name,
                 'value': l,
-            } for l in session.query(Location)]
+            } for l in sorted(session.query(Location), key=attrgetter('name'))]
         })['location']
         questions = [{
             'type': 'input',
@@ -695,7 +697,7 @@ def incident_location_menu(incident):
             'choices': [{
                 'name': l.name,
                 'value': l,
-            } for l in locations] + [{
+            } for l in sorted(locations, key=attrgetter('name'))] + [{
                 'name': '[Enter new]',
                 'value': 'new',
             }],
@@ -737,7 +739,8 @@ def incident_violation_type_menu(incident):
             'type': 'list',
             'name': 'violation_type',
             'message': 'Violation Type',
-            'choices': [v.short_name for v in violation_types] + ['[Enter new]'],
+            'choices': [v.short_name for v in
+                        sorted(violation_types, key=attrgetter('short_name'))] + ['[Enter new]'],
         })['violation_type']
         if violation_type_short_name != '[Enter new]':
             violation_type = session.query(ViolationType).filter_by(

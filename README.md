@@ -10,3 +10,4 @@ I don't recommend using it at all. Instead please use the following projects wit
 
 * http://wegeheld.org/ (App for Android and iOS)
 * https://stadtpate.de/ (Mobile friendly web app)
+* https://www.weg-li.de (Very nice, powerful and intuitive web app)

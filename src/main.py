@@ -853,14 +853,13 @@ def incident_photos_menu(incident):
 
 
 def photo_menu(photo):
-    unreported_incidents = (session.query(Incident)
-                            .filter_by(reported_at=None)
-                            .order_by(Incident.time.desc()))
+    previous_incidents = (session.query(Incident)
+                          .order_by(Incident.time.desc()))
     choices = [{
         'name': 'Create new Incident',
         'value': 'new_incident',
     }]
-    if unreported_incidents.first():
+    if previous_incidents.first():
         choices.append({
             'name': 'Add to previous Incident',
             'value': 'previous_incident',
@@ -899,7 +898,7 @@ def photo_menu(photo):
                                           i.location and i.location.name,
                                           i.car and i.car.license_plate),
                 'value': i,
-            } for i in unreported_incidents]
+            } for i in previous_incidents]
         })['incident']
         incident.photos.append(photo)
         session.commit()

@@ -545,10 +545,9 @@ def report_incident(incident):
         out_file_path = os.path.join(reports_path, photo.filename)
         img = PIL.Image.open(in_file_path)
 
-        if 'vlcsnap' not in photo.filename:
-            size = img.size
-            new_size = (int(size[0] * scale_image), int(size[1] * scale_image))
-            img = img.resize(new_size, resample=PIL.Image.LANCZOS)
+        size = img.size
+        new_size = (int(size[0] * scale_image), int(size[1] * scale_image))
+        img = img.resize(new_size, resample=PIL.Image.LANCZOS)
 
         img.save(out_file_path, 'JPEG')
 

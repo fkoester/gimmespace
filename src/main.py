@@ -214,7 +214,7 @@ def manage_cars_menu():
             'choices': [{
                 'name': c.license_plate,
                 'value': c,
-            } for c in session.query(Car)]
+            } for c in sorted(session.query(Car), key=attrgetter('license_plate'))]
         })['car']
         choice = prompt({
             'type': 'list',
@@ -927,11 +927,12 @@ def unprocessed_photos():
                 continue
 
             img = PIL.Image.open(filepath)
-            exif = {
-                PIL.ExifTags.TAGS[k]: v
-                for k, v in img._getexif().items()
-                if k in PIL.ExifTags.TAGS
-            }
+            if hasattr(img, '_getexif'):
+                exif = {
+                    PIL.ExifTags.TAGS[k]: v
+                    for k, v in img._getexif().items()
+                    if k in PIL.ExifTags.TAGS
+                }
 
             gpsdata = gpsphoto.getGPSData(filepath)
             latitude = gpsdata.get('Latitude')

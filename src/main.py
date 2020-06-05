@@ -539,15 +539,16 @@ def report_incident(incident):
     with open(os.path.join(reports_path, 'message.txt'), 'w') as message_file:
         message_file.write(msg)
 
-    scale_image = email_config.getfloat('scale_image')
+    max_image_width = email_config.getint('max_image_width')
+    max_image_height = email_config.getint('max_image_height')
+
     for photo in incident.photos:
         in_file_path = os.path.join(photo.dirpath, photo.filename)
         out_file_path = os.path.join(reports_path, photo.filename)
         img = PIL.Image.open(in_file_path)
 
-        size = img.size
-        new_size = (int(size[0] * scale_image), int(size[1] * scale_image))
-        img = img.resize(new_size, resample=PIL.Image.LANCZOS)
+        size = max_image_width, max_image_height
+        img.thumbnail(size)
 
         img.save(out_file_path, 'JPEG')
 

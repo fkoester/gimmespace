@@ -1,0 +1,38 @@
+version: '3.1'
+
+services:
+  db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-gimmespace}
+      MYSQL_USER: ${MYSQL_USER:-gimmespace}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - db:/var/lib/mysql
+      - ../initdb.d/:/docker-entrypoint-initdb.d:ro
+      - ./mysql.conf.d:/etc/mysql/conf.d
+    ports:
+      - 127.0.0.1:${MYSQL_PORT:-62450}:3306
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.0
+    environment:
+      PMA_ABSOLUTE_URI: ${PMA_EXTERNAL_URL}
+    ports:
+      - ${PHP_MY_ADMIN_EXTERNAL_IP:-127.0.0.1}:${PHP_MY_ADMIN_EXTERNAL_PORT:-62451}:80
+    depends_on:
+      - db
+
+  sqitch:
+    image: sqitch/sqitch
+    env_file: ../.env
+    environment:
+      SQITCH_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - ../:/repo/
+    depends_on:
+      - db
+
+volumes:
+  db:

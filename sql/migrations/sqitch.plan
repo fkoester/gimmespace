@@ -1,0 +1,22 @@
+%syntax-version=1.0.0
+%project=gimmespace
+
+2020-11-23-new-schema 2020-11-23T09:41:17Z Fabian Köster <mail@fabian-koester.com> # Apply reworked schema
+2020-11-23-vehicle-registration 2020-11-23T09:48:15Z Fabian Köster <mail@fabian-koester.com> # Differentiate between cars and their registration
+2020-11-23-fines 2020-11-23T12:08:30Z Fabian Köster <mail@fabian-koester.com> # Add fines to data model
+2020-11-23-foreign-keys 2020-11-23T20:47:57Z Fabian Köster <mail@fabian-koester.com> # Add foreign key constraints
+2020-11-25-location-geo 2020-11-25T12:51:22Z Fabian Köster <mail@fabian-koester.com> # Use MariaDB's geolocation data type
+view_IncidentExtra 2020-11-23T21:00:55Z Fabian Köster <mail@fabian-koester.com> # View IncidentExtra
+2020-11-26_violation_type_fines 2020-11-26T15:29:19Z Fabian Köster <mail@fabian-koester.com> # Add fines for the violation types
+view_ViolationTypeExtra 2020-11-26T15:38:57Z Fabian Köster <mail@fabian-koester.com> # View ViolationTypeExtra
+2020-11-28-photo-geolocation 2020-11-28T13:32:56Z Fabian Köster <mail@fabian-koester.com> # Use proper data type for photo geolocations
+2020-11-28-photo-default 2020-11-28T13:45:54Z Fabian Köster <mail@fabian-koester.com> # Set default values for Photo entries
+2020-11-28-fix-vehicle-registration-pk 2020-11-28T18:59:33Z Fabian Köster <mail@fabian-koester.com> # Fix primary key of VehicleRegistration
+view_VehicleExtra 2020-11-28T18:53:12Z Fabian Köster <mail@fabian-koester.com> # View VehicleExtra
+2020-11-29_incidentId_auto_inc 2020-11-29T11:50:55Z Fabian Köster <mail@fabian-koester.com> # Make incidentId auto increment
+2020-11-29-incident-default 2020-11-29T11:55:54Z Fabian Köster <mail@fabian-koester.com> # Set default values for Incident
+2020-12-01-ViolationType_auto_inc 2020-12-01T08:12:30Z Fabian Köster <mail@fabian-koester.com> # Auto increment violationTypeId
+2020-12-01-Location_auto_inc 2020-12-01T08:32:12Z Fabian Köster <mail@fabian-koester.com> # Auto increment locationId
+@2020-12-01 2020-12-02T12:00:44Z Fabian Köster <mail@fabian-koester.com> # Tag intermediate state
+view_IncidentExtra [view_IncidentExtra@2020-12-01] 2020-12-02T12:00:48Z Fabian Köster <mail@fabian-koester.com> # Add registration country code
+view_VehicleStats 2020-11-26T18:32:00Z Fabian Köster <mail@fabian-koester.com> # View VehicleStats

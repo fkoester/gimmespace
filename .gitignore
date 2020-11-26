@@ -108,3 +108,7 @@ venv.bak/
 database.sqlite
 
 pip-selfcheck.json
+
+node_modules
+
+backups/

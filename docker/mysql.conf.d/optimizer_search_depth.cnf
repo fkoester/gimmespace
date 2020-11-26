@@ -1,0 +1,2 @@
+[mariadb]
+optimizer_search_depth=0

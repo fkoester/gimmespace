@@ -6,10 +6,11 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship, sessionmaker
 from xdg.BaseDirectory import xdg_data_home
 
-data_dir = os.path.join(xdg_data_home, 'gimmespace')
-database_path = os.path.join(data_dir, 'database.sqlite')
-os.makedirs(data_dir, exist_ok=True)
-engine = create_engine('sqlite:///{}'.format(database_path))
+# data_dir = os.path.join(xdg_data_home, 'gimmespace')
+# database_path = os.path.join(data_dir, 'database.sqlite')
+# os.makedirs(data_dir, exist_ok=True)
+# engine = create_engine('sqlite:///{}'.format(database_path))
+engine = create_engine('mysql+mysqldb://gimmespace:hmXkZWsIOHJKAkbVnQZ9@127.0.0.1:62450/gimmespace?charset=utf8mb4')
 
 Base = declarative_base()
 

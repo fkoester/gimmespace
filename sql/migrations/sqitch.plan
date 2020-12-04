@@ -20,3 +20,4 @@ view_VehicleExtra 2020-11-28T18:53:12Z Fabian Köster <mail@fabian-koester.com> 
 @2020-12-01 2020-12-02T12:00:44Z Fabian Köster <mail@fabian-koester.com> # Tag intermediate state
 view_IncidentExtra [view_IncidentExtra@2020-12-01] 2020-12-02T12:00:48Z Fabian Köster <mail@fabian-koester.com> # Add registration country code
 view_VehicleStats 2020-11-26T18:32:00Z Fabian Köster <mail@fabian-koester.com> # View VehicleStats
+2020-12-04-incident-ingore-detail 2020-12-04T11:01:54Z Fabian Köster <mail@fabian-koester.com> # Detailed data about why incident was ignored

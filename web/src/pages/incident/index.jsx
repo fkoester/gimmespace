@@ -490,7 +490,11 @@ class IncidentPage extends React.Component {
               filterBy={() => true}
               placeholder="Kennzeichen"
               isLoading={loadingVehicles}
-              labelKey="licensePlate"
+              labelKey={({
+                vehicleRegistrationId,
+                vehicleBrandId,
+                vehicleColorId,
+              }) => `${vehicleRegistrationId} (${vehicleBrandId} ${vehicleColorId})`}
               minLength={2}
               onSearch={this.searchVehicles}
               options={vehicleOptions}

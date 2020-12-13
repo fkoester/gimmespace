@@ -133,6 +133,10 @@ router.post('/', rejectionHandler(async (req) => {
     locationId,
     violationTypeId,
     photos,
+    valvePositionFrontLeft,
+    valvePositionFrontRight,
+    valvePositionRearLeft,
+    valvePositionRearRight,
   } = req.body || {}
 
   const dbConnection = await db.getConnection()
@@ -155,6 +159,10 @@ router.post('/', rejectionHandler(async (req) => {
       vehicleId,
       locationId,
       seenAt: firstPhoto.timestamp,
+      valvePositionFrontLeft,
+      valvePositionFrontRight,
+      valvePositionRearLeft,
+      valvePositionRearRight,
     }])
     const [{ incidentId }] = await dbConnection.query('SELECT LAST_INSERT_ID() AS incidentId')
     await dbConnection.query('INSERT INTO ViolationTypeIncident SET ?', [{

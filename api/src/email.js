@@ -60,6 +60,36 @@ export async function generateIncidentReportEmail(incidentId) {
     throw new NotFoundError()
   }
 
+  const numberFormat = new Intl.NumberFormat('de', {
+    minimumIntegerDigits: 2,
+  })
+
+  const labels = {
+    valvePositionFrontLeft: 'VL',
+    valvePositionFrontRight: 'VR',
+    valvePositionRearLeft: 'HL',
+    valvePositionRearRight: 'HR',
+  }
+
+  let valvePositions = ''
+
+  const fields = [
+    'valvePositionFrontLeft',
+    'valvePositionFrontRight',
+    'valvePositionRearLeft',
+    'valvePositionRearRight',
+  ]
+
+  fields.forEach((field) => {
+    if (incident[field] != null) {
+      valvePositions += `${labels[field]}:${numberFormat.format(incident[field])} `
+    }
+  })
+
+  if (valvePositions) {
+    valvePositions = `Ventilstellung(en): ${valvePositions.trim()}`
+  }
+
   const res = await email.send({
     template: 'report',
     message: {
@@ -73,6 +103,7 @@ export async function generateIncidentReportEmail(incidentId) {
             .toLocaleString(DateTime.DATETIME_FULL)
         ),
         licensePlate: licensePlateDisplay(incident),
+        valvePositions,
       },
       authority: config.AUTHORITY,
       sender: config.SENDER,

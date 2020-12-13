@@ -206,6 +206,10 @@ class IncidentPage extends React.Component {
       selectedVehicleId,
       selectedLocationId,
       selectedViolationTypeId,
+      valvePositionFrontLeft,
+      valvePositionFrontRight,
+      valvePositionRearLeft,
+      valvePositionRearRight,
     } = this.state
 
     const { incidentId } = await createIncident({
@@ -213,6 +217,10 @@ class IncidentPage extends React.Component {
       locationId: selectedLocationId,
       violationTypeId: selectedViolationTypeId,
       photos: photos.map((photo) => photo.filename),
+      valvePositionFrontLeft,
+      valvePositionFrontRight,
+      valvePositionRearLeft,
+      valvePositionRearRight,
     })
 
     await this.setState({
@@ -531,6 +539,42 @@ class IncidentPage extends React.Component {
               onChange={(selections) => this.setState({
                 selectedViolationTypeId: selections[0]?.violationTypeId
               })}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Ventil vorne links</Form.Label>
+            <Form.Control
+              type="number"
+              min="0"
+              max="11"
+              onChange={(event) => this.setState({ valvePositionFrontLeft: parseInt(event.target.value, 10) })}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Ventil vorne rechts</Form.Label>
+            <Form.Control
+              type="number"
+              min="0"
+              max="11"
+              onChange={(event) => this.setState({ valvePositionFrontRight: parseInt(event.target.value, 10) })}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Ventil hinten links</Form.Label>
+            <Form.Control
+              type="number"
+              min="0"
+              max="11"
+              onChange={(event) => this.setState({ valvePositionRearLeft: parseInt(event.target.value, 10) })}
+            />
+          </Form.Group>
+          <Form.Group>
+            <Form.Label>Ventil hinten rechts</Form.Label>
+            <Form.Control
+              type="number"
+              min="0"
+              max="11"
+              onChange={(event) => this.setState({ valvePositionRearRight: parseInt(event.target.value, 10) })}
             />
           </Form.Group>
         </Form>

@@ -31,6 +31,7 @@ SELECT
      WHERE (
        incident.vehicleId = vehicle.vehicleId
        AND incident.seenAt >= startDate
+       AND incident.seenAt <= endDate
      )
   ) AS incidentsCountTotal,
   (
@@ -40,6 +41,7 @@ SELECT
        incident.vehicleId = vehicle.vehicleId
        AND incident.reportedAt IS NOT NULL
        AND incident.seenAt >= startDate
+       AND incident.seenAt <= endDate
      )
   ) AS incidentsCountReported,
   (
@@ -51,6 +53,7 @@ SELECT
        incident.vehicleId = vehicle.vehicleId
        AND incident.reportedAt IS NOT NULL
        AND incident.seenAt >= startDate
+       AND incident.seenAt <= endDate
      )
   ) AS amountTotal,
   (
@@ -60,6 +63,7 @@ SELECT
        incident.vehicleId = vehicle.vehicleId
        AND incident.reportedAt IS NOT NULL
        AND incident.seenAt >= startDate
+       AND incident.seenAt <= endDate
      )
   ) AS firstSeenAt,
   (
@@ -69,6 +73,7 @@ SELECT
        incident.vehicleId = vehicle.vehicleId
        AND incident.reportedAt IS NOT NULL
        AND incident.seenAt >= startDate
+       AND incident.seenAt <= endDate
      )
   ) AS lastSeenAt
   FROM Vehicle vehicle

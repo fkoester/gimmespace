@@ -27,3 +27,4 @@ procedure_VehicleStats 2020-12-11T10:19:07Z Fabian Köster <mail@fabian-koester.
 @2020-12-12 2020-12-13T16:04:33Z Fabian Köster <mail@fabian-koester.com> # Tag intermediate state
 2020-12-13-valve-positions 2020-12-13T15:55:48Z Fabian Köster <mail@fabian-koester.com> # Add valve positions to incidents
 view_IncidentExtra [view_IncidentExtra@2020-12-12] 2020-12-13T16:04:52Z Fabian Köster <mail@fabian-koester.com> # Add valve positions to IncidentExtra
+procedure_VehicleStats [procedure_VehicleStats@2020-12-12] 2020-12-14T08:06:34Z Fabian Köster <mail@fabian-koester.com> # Respect given endDate

@@ -77,8 +77,14 @@ returncode = call([os.path.join(script_dir, "../extract.sh"), videos_dir])
 if returncode != 0:
     sys.exit(1)
 
+with open("manifest.json") as manifest_file:
+    manifest = json.load(manifest_file)
+
 for (dirpath, dirnames, filenames) in walk(snapshots_dir):
     for filename in filenames:
+        if filename in manifest:
+            continue
+
         filepath = os.path.join(dirpath, filename)
 
         img = Image.open(filepath)
@@ -189,3 +195,8 @@ for (dirpath, dirnames, filenames) in walk(snapshots_dir):
         if not output_path.is_file():
             output_path.parent.mkdir(parents=True, exist_ok=True)
             img.save(output_path, "jpeg", exif=exif_bytes)
+
+        manifest[filename] = datetime.now().isoformat()
+
+with open("manifest.json", "w") as manifest_file:
+    json.dump(manifest, manifest_file)

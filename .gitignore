@@ -112,3 +112,4 @@ pip-selfcheck.json
 node_modules
 
 backups/
+manifest.json

@@ -68,7 +68,7 @@ class VehiclePage extends React.Component {
       firstSeenAt,
     } = this.state
 
-    const { vehicleId } = await createVehicle({
+    await createVehicle({
       vehicleRegistrationId,
       vehicleBrandId,
       vehicleColorId,

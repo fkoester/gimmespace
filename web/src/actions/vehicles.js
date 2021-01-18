@@ -73,7 +73,7 @@ export function createVehicleRequest(vehicle) {
       return body
     } catch (error) {
       dispatch(notificationError(error))
+      throw error
     }
-    return []
   }
 }

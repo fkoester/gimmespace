@@ -15,7 +15,27 @@ export function searchLocationsRequest(query) {
       return body
     } catch (error) {
       dispatch(notificationError(error))
+      throw error
     }
-    return []
+  }
+}
+
+export function createLocationRequest(location) {
+  return async (dispatch, getState) => {
+    try {
+      const response = await fetch(`http://localhost:62452/locations/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(location),
+      })
+
+      const body = await getResponseBody(response)
+      return body
+    } catch (error) {
+      dispatch(notificationError(error))
+      throw error
+    }
   }
 }

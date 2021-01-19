@@ -50,12 +50,19 @@ router.post('/crawl', rejectionHandler(async (req) => {
     logger.info(`Crawling for new photos...`)
     for await (const p of walk(config.MAIN.photos_dir)) {
       const filename = path.basename(p)
+
+      if (!filename.toLowerCase().endsWith(".jpg")) {
+        continue
+      }
+
       const dirpath = path.dirname(p)
       const [photo] = await dbConnection.query('SELECT * FROM Photo WHERE filename = ?', [filename])
 
       if (photo) {
         continue
       }
+
+      logger.info(`Processing file ${p}`)
 
       const exifData = await exifr.parse(p, ['GPSLatitude', 'GPSLongitude', 'DateTimeOriginal'])
 

@@ -3,16 +3,24 @@ Sehr geehrte Damen und Herren,
 Hiermit zeige ich – mit der Bitte um Weiterverfolgung durch Ihr Amt – folgende Verkehrsordnungswidrigkeit an:
 
 Verkehrsordnungswidrigkeit: {{incident.fullName}}
+
+{{#if incident.comment}}
 {{incident.comment}}
+
+{{/if}}
 Datum, Uhrzeit: {{incident.seenAtHuman}}
 Ort: {{incident.street}} {{incident.housenumber}}
 {{incident.postcode}} {{authority.city}}
 
+{{#if incident.description}}
 {{incident.description}}
 
+{{/if}}
 Marke und Farbe: {{incident.vehicleBrandId}}, {{incident.vehicleColorId}}
 Kennzeichen: {{incident.licensePlate}}
+{{#if incident.valvePositions}}
 {{incident.valvePositions}}
+{{/if}}
 
 Mit freundlichen Grüßen
 

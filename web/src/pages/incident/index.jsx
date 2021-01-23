@@ -495,9 +495,11 @@ class IncidentPage extends React.Component {
           <Form.Group>
             <Form.Label>Fahrzeug</Form.Label>
             <AsyncTypeahead
+              id="vehicleField"
               filterBy={() => true}
               placeholder="Kennzeichen"
               isLoading={loadingVehicles}
+              useCache={false}
               labelKey={({
                 vehicleRegistrationId,
                 vehicleBrandId,
@@ -514,9 +516,11 @@ class IncidentPage extends React.Component {
           <Form.Group>
             <Form.Label>Ort</Form.Label>
             <AsyncTypeahead
+              id="locationField"
               filterBy={() => true}
               placeholder="Suchen..."
               isLoading={loadingLocations}
+              useCache={false}
               labelKey="displayName"
               minLength={3}
               onSearch={this.searchLocations}
@@ -529,9 +533,11 @@ class IncidentPage extends React.Component {
           <Form.Group>
             <Form.Label>Ordnungswidrigkeit</Form.Label>
             <AsyncTypeahead
+              id="violationTypeField"
               filterBy={() => true}
               placeholder="Suchen..."
               isLoading={loadingViolationTypes}
+              useCache={false}
               labelKey="shortName"
               minLength={3}
               onSearch={this.searchViolationTypes}

@@ -6,27 +6,39 @@ import { bindActionCreators } from 'redux'
 import {
   Button,
   Card,
+  Carousel,
+  Form,
   Modal,
+  Table,
 } from 'react-bootstrap'
 import { DateTime } from 'luxon'
+import { AsyncTypeahead } from 'react-bootstrap-typeahead';
+import IncidentStatus from '../../components/incident-status'
 import {
   getPendingPhotosRequest,
   setPhotosIgnoredRequest,
   crawlPhotosRequest,
 } from '../../actions/photos'
+import {
+  searchIncidentsRequest,
+  addPhotosToExistingIncidentRequest,
+} from '../../actions/incidents'
 
 class IncidentListPage extends React.Component {
   static propTypes = {
     getPendingPhotos: PropTypes.func.isRequired,
     setPhotosIgnored: PropTypes.func.isRequired,
     crawlPhotos: PropTypes.func.isRequired,
+    searchIncidents: PropTypes.func.isRequired,
+    addPhotosToExistingIncident: PropTypes.func.isRequired,
   }
 
   constructor(props) {
     super(props)
     this.state = {
       photos: null,
-      selectedPhotos: {}
+      selectedPhotos: {},
+      showAddToExistingIncidentOverlay: false,
     }
   }
 
@@ -93,6 +105,31 @@ class IncidentListPage extends React.Component {
     history.push(`/incidents/new?${query}`)
   }
 
+  onAddToExistingIncident = async () => {
+    const {
+      addPhotosToExistingIncident,
+    } = this.props
+    const {
+      selectedIncident,
+      selectedPhotos,
+    } = this.state
+
+    const {
+      incidentId,
+    } = selectedIncident
+
+    const filenames = Object.keys(selectedPhotos).filter((filename) => selectedPhotos[filename])
+
+    await addPhotosToExistingIncident(incidentId, filenames)
+
+    await this.setState({
+      showAddToExistingIncidentOverlay: false,
+      selectedIncident: null,
+    })
+
+    await this.loadPhotos()
+  }
+
   crawl = async () => {
     const {
       crawlPhotos,
@@ -100,6 +137,141 @@ class IncidentListPage extends React.Component {
 
     await crawlPhotos()
     await this.loadPhotos()
+  }
+
+  searchIncidents = async (query) => {
+    const {
+      searchIncidents,
+    } = this.props
+
+    await this.setState({
+      loadingIncidents: true,
+    })
+
+    try {
+      const incidentOptions = await searchIncidents(query)
+      await this.setState({
+        incidentOptions,
+      })
+    } finally {
+      await this.setState({
+        loadingIncidents: false,
+      })
+    }
+  }
+
+  renderAddToExistingIncidentOverlay() {
+    const {
+      showAddToExistingIncidentOverlay,
+      photos,
+      selectedPhotos,
+      loadingIncidents,
+      incidentOptions,
+      selectedIncident,
+    } = this.state
+
+    if (!showAddToExistingIncidentOverlay) {
+      return null
+    }
+
+    return (
+      <Modal
+        size="xl"
+        show={showAddToExistingIncidentOverlay}
+        onHide={() => this.setState({ showAddToExistingIncidentOverlay: false, selectedIncident: null })}
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            Add to existing incident
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group>
+              <Form.Label>Incident</Form.Label>
+              <AsyncTypeahead
+                id="vehicleField"
+                filterBy={() => true}
+                placeholder="Kennzeichen"
+                isLoading={loadingIncidents}
+                useCache={false}
+                labelKey={({
+                  vehicleRegistrationId,
+                  incidentId,
+                  seenAt,
+                  displayName,
+                  shortName,
+                }) => `${vehicleRegistrationId}; #${incidentId}; ${DateTime.fromISO(seenAt).toLocaleString(DateTime.DATETIME_SHORT)}; ${displayName}; ${shortName}`}
+                minLength={2}
+                onSearch={this.searchIncidents}
+                options={incidentOptions}
+                onChange={(selections) => this.setState({
+                  selectedIncident: selections[0],
+                })}
+              />
+            </Form.Group>
+          </Form>
+          <Carousel className="photos" interval={null}>
+            {
+              photos.filter((photo) => selectedPhotos[photo.filename]).map((photo) => (
+                <Carousel.Item key={photo.filename}>
+                  <img
+                    style={{ maxWidth: '100%', maxHeight: '1200px'}}
+                    src={`http://localhost:62452/photos${photo.dirpath}/${photo.filename}`}
+                    alt={photo.filename}
+                  />
+                </Carousel.Item>
+              ))
+            }
+          </Carousel>
+          {
+            selectedIncident && (
+              <Table bordered>
+                <tbody>
+                  <tr>
+                    <th>Gesehen</th>
+                    <td>{ DateTime.fromISO(selectedIncident.seenAt).toLocaleString(DateTime.DATETIME_FULL) }</td>
+                  </tr>
+                  <tr>
+                    <th>Ort</th>
+                    <td>{ selectedIncident.displayName }</td>
+                  </tr>
+                  <tr>
+                    <th>Fahrzeug</th>
+                    <td>{ selectedIncident.vehicleRegistrationId } { selectedIncident.vehicleBrandId } { selectedIncident.vehicleColorId }</td>
+                  </tr>
+                  <tr>
+                    <th>Ordnungswidrigkeit</th>
+                    <td>{ selectedIncident.fullName }</td>
+                  </tr>
+                  <tr>
+                    <th>Status</th>
+                    <td>
+                      <IncidentStatus incident={selectedIncident} />
+                    </td>
+                  </tr>
+                </tbody>
+              </Table>
+            )
+          }
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => this.setState({ showAddToExistingIncidentOverlay: false, selectedIncident: null })}
+          >
+            Schließen
+          </Button>
+          <Button
+            variant="success"
+            disabled={!selectedIncident}
+            onClick={this.onAddToExistingIncident}
+          >
+            Add to existing incident
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    )
   }
 
   renderPhotoOverlay() {
@@ -189,6 +361,9 @@ class IncidentListPage extends React.Component {
         {
           this.renderPhotoOverlay()
         }
+        {
+          this.renderAddToExistingIncidentOverlay()
+        }
         <div style={{
           position: 'fixed',
           bottom: '40px',
@@ -217,7 +392,12 @@ class IncidentListPage extends React.Component {
           >
             Create Incident
           </Button>
-          <Button variant="primary" size="lg" style={{ marginLeft: '1em'}}>
+          <Button
+            variant="primary"
+            size="lg"
+            style={{ marginLeft: '1em'}}
+            onClick={() => this.setState({ showAddToExistingIncidentOverlay: true })}
+          >
             Add to existing
           </Button>
         </div>
@@ -234,6 +414,8 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   getPendingPhotos: getPendingPhotosRequest,
   setPhotosIgnored: setPhotosIgnoredRequest,
   crawlPhotos: crawlPhotosRequest,
+  searchIncidents: searchIncidentsRequest,
+  addPhotosToExistingIncident: addPhotosToExistingIncidentRequest,
 }, dispatch)
 
 export default connect(mapStateToProps, mapDispatchToProps)(IncidentListPage)

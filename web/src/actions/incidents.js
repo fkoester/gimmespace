@@ -173,6 +173,45 @@ export function createIncidentRequest(incident) {
     } catch (error) {
       dispatch(notificationError(error))
     }
+    return null
+  }
+}
+
+export function addPhotosToExistingIncidentRequest(incidentId, photos) {
+  return async (dispatch, getState) => {
+    try {
+      const response = await fetch(`http://localhost:62452/incidents/${incidentId}/photos`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(photos),
+      })
+
+      const body = await getResponseBody(response)
+      return body
+    } catch (error) {
+      dispatch(notificationError(error))
+    }
+    return []
+  }
+}
+
+export function searchIncidentsRequest(query) {
+  return async (dispatch, getState) => {
+    try {
+      const response = await fetch(`http://localhost:62452/incidents?query=${query}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const body = await getResponseBody(response)
+      return body
+    } catch (error) {
+      dispatch(notificationError(error))
+    }
     return []
   }
 }

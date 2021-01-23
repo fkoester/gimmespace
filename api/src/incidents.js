@@ -17,7 +17,20 @@ const execAsync = util.promisify(exec)
 
 const router = express.Router()
 
-router.get('/', rejectionHandler(async (req) => db.query('SELECT * FROM IncidentExtra WHERE reportedAt is NULL and ignoreIncident = 0 ORDER by seenAt ASC')))
+router.get('/', rejectionHandler(async (req) => {
+  if (req.query?.query) {
+    return db.query(`
+      SELECT *
+      FROM IncidentExtra
+      WHERE vehicleRegistrationId LIKE ?
+      ORDER BY seenAt DESC
+      LIMIT 10
+  `, [
+      `%${req.query.query}%`,
+    ])
+  }
+  return db.query('SELECT * FROM IncidentExtra WHERE reportedAt is NULL and ignoreIncident = 0 ORDER by seenAt ASC')
+}))
 
 router.get('/:incidentId', rejectionHandler(async (req) => {
   const {
@@ -99,6 +112,19 @@ router.post('/:incidentId/report', rejectionHandler(async (req) => {
   ])
 
   logger.info(`Successfully reported incident ${incidentId}`)
+}))
+
+router.put('/:incidentId/photos/', rejectionHandler(async (req) => {
+  const {
+    incidentId,
+  } = req.params || {}
+
+  const photos = req.body
+
+  await db.query('UPDATE Photo SET incidentId = ? WHERE filename IN (?)', [
+    incidentId,
+    photos,
+  ])
 }))
 
 router.put('/:incidentId/photos/:filename/ignore', rejectionHandler(async (req) => {

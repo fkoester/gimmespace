@@ -9,7 +9,6 @@ import {
   Button,
   Table,
   Carousel,
-  Badge,
   Modal,
   Form,
 } from 'react-bootstrap'
@@ -26,6 +25,7 @@ import icon from 'leaflet/dist/images/marker-icon.png'
 import shadow from 'leaflet/dist/images/marker-shadow.png'
 import { AsyncTypeahead } from 'react-bootstrap-typeahead';
 import ReactRouterPropTypes from '../../utils/react-router-prop-types'
+import IncidentStatus from '../../components/incident-status'
 import {
   getIncidentRequest,
   getPendingIncidentsRequest,
@@ -437,22 +437,6 @@ class IncidentPage extends React.Component {
     )
   }
 
-  renderStatus(incident) {
-    if (incident.reportedAt) {
-      return (
-        <>
-          <Badge variant="success">Reported</Badge>
-          <span>( { DateTime.fromISO(incident.reportedAt).toLocaleString(DateTime.DATETIME_FULL) } )</span>
-        </>
-      )
-    }
-
-    if (incident.ignoreIncident) {
-      return <Badge variant="warning">Ignored</Badge>
-    }
-
-    return <Badge variant="primary">Pending</Badge>
-  }
 
   renderNavigationButton(label, incidentId) {
     if (!incidentId) {
@@ -608,7 +592,9 @@ class IncidentPage extends React.Component {
           </tr>
           <tr>
             <th>Status</th>
-            <td>{ this.renderStatus(incident) }</td>
+            <td>
+              <IncidentStatus incident={incident} />
+            </td>
           </tr>
         </tbody>
       </Table>

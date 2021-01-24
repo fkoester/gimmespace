@@ -79,6 +79,9 @@ class IncidentListPage extends React.Component {
     const filenames = Object.keys(selectedPhotos).filter((filename) => selectedPhotos[filename])
 
     await setPhotosIgnored(filenames, true)
+    await this.setState({
+      selectedPhotos: {},
+    })
     await this.loadPhotos()
   }
 
@@ -125,6 +128,7 @@ class IncidentListPage extends React.Component {
     await this.setState({
       showAddToExistingIncidentOverlay: false,
       selectedIncident: null,
+      selectedPhotos: {},
     })
 
     await this.loadPhotos()

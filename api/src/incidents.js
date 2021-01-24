@@ -42,17 +42,19 @@ router.get('/:incidentId', rejectionHandler(async (req) => {
     throw new NotFoundError()
   }
 
-  incident.geolocation = {
-    longitude: incident.geolocation.x,
-    latitude: incident.geolocation.y,
-  }
-
-  incident.seenAt = incident.seenAt.toISOString()
-
   const photos = await db.query('SELECT * FROM Photo WHERE incidentId = ? ORDER BY timestamp', [incidentId])
 
   return {
     ...incident,
+    seenAt: incident.seenAt.toISOString(),
+    reportedAt: incident.reportedAt?.toISOString(),
+    ignoreIncident: Boolean(incident.ignoreIncident),
+    reportedViaPhone: Boolean(incident.reportedViaPhone),
+    alreadyFined: Boolean(incident.alreadyFined),
+    geolocation: {
+      longitude: incident.geolocation.x,
+      latitude: incident.geolocation.y,
+    },
     photos,
   }
 }))
@@ -68,6 +70,32 @@ router.put('/:incidentId/ignore', rejectionHandler(async (req) => {
   }
 
   await db.query('UPDATE Incident SET ignoreIncident = 1 WHERE incidentId = ?', [incidentId])
+}))
+
+router.put('/:incidentId/alreadyFined', rejectionHandler(async (req) => {
+  const {
+    incidentId,
+  } = req.params || {}
+  const [incident] = await db.query('SELECT * FROM IncidentExtra WHERE incidentId = ?', [incidentId])
+
+  if (!incident) {
+    throw new NotFoundError()
+  }
+
+  await db.query('UPDATE Incident SET ignoreIncident = 1, alreadyFined = 1 WHERE incidentId = ?', [incidentId])
+}))
+
+router.put('/:incidentId/reportedViaPhone', rejectionHandler(async (req) => {
+  const {
+    incidentId,
+  } = req.params || {}
+  const [incident] = await db.query('SELECT * FROM IncidentExtra WHERE incidentId = ?', [incidentId])
+
+  if (!incident) {
+    throw new NotFoundError()
+  }
+
+  await db.query('UPDATE Incident SET reportedViaPhone = 1 WHERE incidentId = ?', [incidentId])
 }))
 
 router.post('/:incidentId/openPhotoEditor', rejectionHandler(async (req) => {

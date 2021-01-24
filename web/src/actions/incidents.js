@@ -40,6 +40,44 @@ export function ignoreIncidentRequest(incidentId) {
   }
 }
 
+export function setIncidentAlreadyFinedRequest(incidentId) {
+  return async (dispatch, getState) => {
+    try {
+      const response = await fetch(`http://localhost:62452/incidents/${incidentId}/alreadyFined`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const body = await getResponseBody(response)
+      return body
+    } catch (error) {
+      dispatch(notificationError(error))
+    }
+    return []
+  }
+}
+
+export function setIncidentReportedViaPhoneRequest(incidentId) {
+  return async (dispatch, getState) => {
+    try {
+      const response = await fetch(`http://localhost:62452/incidents/${incidentId}/reportedViaPhone`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      const body = await getResponseBody(response)
+      return body
+    } catch (error) {
+      dispatch(notificationError(error))
+    }
+    return []
+  }
+}
+
 export function setIncidentIgnorePhotoRequest(incidentId, filename, ignorePhoto) {
   return async (dispatch, getState) => {
     try {

@@ -34,6 +34,8 @@ import {
   reportIncidentRequest,
   openPhotoEditorRequest,
   setIncidentIgnorePhotoRequest,
+  setIncidentAlreadyFinedRequest,
+  setIncidentReportedViaPhoneRequest,
   removePhotoFromIncidentRequest,
   createIncidentRequest,
 } from '../../actions/incidents'
@@ -72,6 +74,8 @@ class IncidentPage extends React.Component {
     reportIncident: PropTypes.func.isRequired,
     openPhotoEditor: PropTypes.func.isRequired,
     setIncidentIgnorePhoto: PropTypes.func.isRequired,
+    setIncidentAlreadyFined: PropTypes.func.isRequired,
+    setIncidentReportedViaPhone: PropTypes.func.isRequired,
     removePhotoFromIncident: PropTypes.func.isRequired,
     searchVehicles: PropTypes.func.isRequired,
     searchLocations: PropTypes.func.isRequired,
@@ -190,6 +194,35 @@ class IncidentPage extends React.Component {
     } = this.props
 
     await ignoreIncident(incidentId)
+    await this.loadIncident()
+  }
+
+  setIncidentAlreadyFined = async () => {
+    const {
+      match: {
+        params: {
+          incidentId,
+        },
+      },
+      setIncidentAlreadyFined,
+    } = this.props
+
+    await setIncidentAlreadyFined(incidentId)
+    await this.loadIncident()
+  }
+
+
+  setIncidentReportedViaPhone = async () => {
+    const {
+      match: {
+        params: {
+          incidentId,
+        },
+      },
+      setIncidentReportedViaPhone,
+    } = this.props
+
+    await setIncidentReportedViaPhone(incidentId)
     await this.loadIncident()
   }
 
@@ -720,6 +753,20 @@ class IncidentPage extends React.Component {
             Ignorieren
           </Button>
           <Button
+            variant="warning"
+            onClick={this.setIncidentAlreadyFined}
+            disabled={Boolean(incident.ignoreIncident || incident.reportedAt)}
+          >
+            Already fined
+          </Button>
+          <Button
+            variant="warning"
+            onClick={this.setIncidentReportedViaPhone}
+            disabled={incident.reportedViaPhone}
+          >
+            Reported via phone
+          </Button>
+          <Button
             variant="secondary"
             onClick={this.openPhotoEditor}
             disabled={Boolean(incident.ignoreIncident || incident.reportedAt)}
@@ -785,6 +832,8 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   reportIncident: reportIncidentRequest,
   openPhotoEditor: openPhotoEditorRequest,
   setIncidentIgnorePhoto: setIncidentIgnorePhotoRequest,
+  setIncidentAlreadyFined: setIncidentAlreadyFinedRequest,
+  setIncidentReportedViaPhone: setIncidentReportedViaPhoneRequest,
   removePhotoFromIncident: removePhotoFromIncidentRequest,
   searchVehicles: searchVehiclesRequest,
   searchLocations: searchLocationsRequest,

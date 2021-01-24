@@ -3,10 +3,11 @@ import {
   rejectionHandler,
 } from './utils'
 import db from './db'
+import { NotFoundError } from './errors'
 
 const router = express.Router()
 
-router.get('/search', rejectionHandler(async (req) => {
+router.get('/', rejectionHandler(async (req) => {
   const vehicles = await db.query(`
   SELECT *
   FROM VehicleExtra
@@ -17,8 +18,18 @@ router.get('/search', rejectionHandler(async (req) => {
   return vehicles
 }))
 
-router.get('/brands', rejectionHandler((req) => db.query('SELECT * FROM VehicleBrand ORDER By vehicleBrandId')))
-router.get('/colors', rejectionHandler((req) => db.query('SELECT * FROM VehicleColor ORDER By vehicleColorId')))
+router.get('/:vehicleId', rejectionHandler(async (req) => {
+  const {
+    vehicleId,
+  } = req.params || {}
+
+  const [vehicle] = await db.query('SELECT * FROM VehicleExtra WHERE vehicleId = ?', [vehicleId])
+
+  if (!vehicle) {
+    throw new NotFoundError()
+  }
+  return vehicle
+}))
 
 router.post('/', rejectionHandler(async (req) => {
   const {

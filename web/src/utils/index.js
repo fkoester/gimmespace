@@ -62,3 +62,33 @@ export function groupByKeyFun(xs, keyFun) {
 export function isNumber(value) {
   return typeof value === 'number'
 }
+
+export function renderValvePositions(incident) {
+  const numberFormat = new Intl.NumberFormat('de', {
+    minimumIntegerDigits: 2,
+  })
+
+  const labels = {
+    valvePositionFrontLeft: 'VL',
+    valvePositionFrontRight: 'VR',
+    valvePositionRearLeft: 'HL',
+    valvePositionRearRight: 'HR',
+  }
+
+  let valvePositions = []
+
+  const fields = [
+    'valvePositionFrontLeft',
+    'valvePositionFrontRight',
+    'valvePositionRearLeft',
+    'valvePositionRearRight',
+  ]
+
+  fields.forEach((field) => {
+    if (incident[field] != null) {
+      valvePositions.push(`${labels[field]}:${numberFormat.format(incident[field])}`)
+    }
+  })
+
+  return valvePositions.join(' ')
+}

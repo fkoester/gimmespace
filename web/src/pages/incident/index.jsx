@@ -48,6 +48,7 @@ import {
 import {
   searchViolationTypesRequest,
 } from '../../actions/violationTypes'
+import { renderValvePositions } from '../../utils'
 
 import 'leaflet/dist/leaflet.css';
 import './style.css'
@@ -622,6 +623,10 @@ class IncidentPage extends React.Component {
           <tr>
             <th>Ordnungswidrigkeit</th>
             <td>{ incident.fullName }</td>
+          </tr>
+          <tr>
+            <th>Ventilstellungen</th>
+            <td>{ renderValvePositions(incident) }</td>
           </tr>
           <tr>
             <th>Status</th>

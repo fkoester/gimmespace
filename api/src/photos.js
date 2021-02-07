@@ -1,7 +1,5 @@
 import fs from 'fs'
 import path from 'path'
-import util from 'util'
-import { exec } from 'child_process'
 import express from 'express'
 import exifr from 'exifr'
 import {

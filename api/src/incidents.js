@@ -111,7 +111,7 @@ router.post('/:incidentId/openPhotoEditor', rejectionHandler(async (req) => {
   const photos = await db.query('SELECT * FROM Photo WHERE incidentId = ?', [incidentId])
 
   await Promise.mapSeries(photos, async (photo) => {
-    await execAsync(`/usr/bin/gimp ${photo.dirpath}/${photo.filename}`)
+    await execAsync(`/usr/bin/gimp "${photo.dirpath}/${photo.filename}"`)
   })
 }))
 

@@ -82,8 +82,8 @@ with open("manifest.json") as manifest_file:
 
 for (dirpath, dirnames, filenames) in walk(snapshots_dir):
     for filename in filenames:
-        # if filename in manifest:
-        #     continue
+        if filename in manifest:
+            continue
 
         filepath = os.path.join(dirpath, filename)
 
@@ -118,22 +118,14 @@ for (dirpath, dirnames, filenames) in walk(snapshots_dir):
         start_datetime = timezone.localize(
             datetime.strptime(creation_time_str, "%Y-%m-%dT%H:%M:%S.%fZ")
         )
-        # print("{} => {}".format(creation_time_str, start_datetime.isoformat()))
+        print("{} => {}".format(creation_time_str, start_datetime.isoformat()))
 
         snapshot_datetime = start_datetime + timedelta(
             hours=offset_hours, minutes=offset_minutes, seconds=offset_seconds
         )
 
-        if snapshot_datetime < timezone.localize(datetime(2021, 3, 28, 2, 0, 0)):
-            continue
-
-        print("Snapshot has incorrect time, fixing...")
-
-        fixed_datetime = snapshot_datetime + timedelta(minutes=57, seconds=50)
-        print(f"{snapshot_datetime.isoformat()} => {fixed_datetime.isoformat()}")
-
         exif_ifd = {
-            piexif.ExifIFD.DateTimeOriginal: fixed_datetime.strftime(
+            piexif.ExifIFD.DateTimeOriginal: snapshot_datetime.strftime(
                 "%Y:%m:%d %H:%M:%S"
             ),
         }
@@ -179,7 +171,7 @@ for (dirpath, dirnames, filenames) in walk(snapshots_dir):
         # img = img.rotate(180)
 
         width, height = img.size
-        watermark_text = fixed_datetime.strftime("%d.%m.%Y %H:%M:%S")
+        watermark_text = snapshot_datetime.strftime("%d.%m.%Y %H:%M:%S")
         draw = ImageDraw.Draw(img)
 
         font = ImageFont.truetype(watermark_font, 60)
@@ -200,9 +192,9 @@ for (dirpath, dirnames, filenames) in walk(snapshots_dir):
             filename,
         )
 
-        # if not output_path.is_file():
-        # output_path.parent.mkdir(parents=True, exist_ok=True)
-        img.save(output_path, "jpeg", exif=exif_bytes)
+        if not output_path.is_file():
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            img.save(output_path, "jpeg", exif=exif_bytes)
 
         manifest[filename] = datetime.now().isoformat()
 

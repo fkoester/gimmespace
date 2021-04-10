@@ -20,6 +20,7 @@ export COMPOSE_INTERACTIVE_NO_CLI=1
 
 export $(cat .env | grep MYSQL_ROOT_PASSWORD | xargs)
 docker-compose exec db mysqldump -p${MYSQL_ROOT_PASSWORD} --routines gimmespace > "${WORKDIR}/gimmespace.sql" || (cat "${WORKDIR}/gimmespace.sql"; exit 1)
+docker-compose exec db mysqldump -p${MYSQL_ROOT_PASSWORD} --routines sqitch > "${WORKDIR}/sqitch.sql" || (cat "${WORKDIR}/sqitch.sql"; exit 1)
 
 echo "==> Creating compressed tarball of files..."
 tar -c -J -C "${WORKDIR}" -f "${TARGET_FILE}" .

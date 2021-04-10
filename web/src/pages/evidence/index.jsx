@@ -1,8 +1,8 @@
 import React from 'react'
 import PropTypes from 'prop-types'
-import qs from 'query-string'
 import { connect } from 'react-redux'
 import { bindActionCreators } from 'redux'
+import qs from 'query-string'
 import {
   Button,
   Card,
@@ -15,20 +15,16 @@ import { DateTime } from 'luxon'
 import { AsyncTypeahead } from 'react-bootstrap-typeahead';
 import IncidentStatus from '../../components/incident-status'
 import {
-  getPendingPhotosRequest,
-  setPhotosIgnoredRequest,
-  crawlPhotosRequest,
-} from '../../actions/photos'
-import {
   searchIncidentsRequest,
   addPhotosToExistingIncidentRequest,
 } from '../../actions/incidents'
+import {
+  getEvidenceRequest,
+} from '../../actions/evidences'
 
-class PhotoListPage extends React.Component {
+class EvidencePage extends React.Component {
   static propTypes = {
-    getPendingPhotos: PropTypes.func.isRequired,
-    setPhotosIgnored: PropTypes.func.isRequired,
-    crawlPhotos: PropTypes.func.isRequired,
+    getEvidece: PropTypes.func.isRequired,
     searchIncidents: PropTypes.func.isRequired,
     addPhotosToExistingIncident: PropTypes.func.isRequired,
   }
@@ -36,19 +32,24 @@ class PhotoListPage extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      photos: null,
+      evidence: null,
       selectedPhotos: {},
       showAddToExistingIncidentOverlay: false,
     }
   }
 
   componentDidMount() {
-    this.loadPhotos()
+    this.loadEvidence()
   }
 
-  loadPhotos = async () => {
+  loadEvidence = async () => {
     const {
-      getPendingPhotos,
+      match: {
+        params: {
+          evidenceId,
+        },
+      },
+      getEvidence,
     } = this.props
 
     await this.setState({
@@ -56,9 +57,15 @@ class PhotoListPage extends React.Component {
     })
 
     try {
-      const photos = await getPendingPhotos()
+      const evidence = await getEvidence(evidenceId)
+
+      const selectedPhotos = evidence.photos.reduce((acc, photo) => {
+        acc[photo.filename] = true
+        return acc
+      }, {})
       await this.setState({
-        photos,
+        evidence,
+        selectedPhotos,
       })
     } finally {
       this.setState({
@@ -67,53 +74,14 @@ class PhotoListPage extends React.Component {
     }
   }
 
-  ignoreSelectedPhotos = async () => {
-    const {
-      setPhotosIgnored,
-    } = this.props
-
-    const {
-      selectedPhotos,
-    } = this.state
-
-    const filenames = Object.keys(selectedPhotos).filter((filename) => selectedPhotos[filename])
-
-    await setPhotosIgnored(filenames, true)
-    await this.setState({
-      selectedPhotos: {},
-    })
-    await this.loadPhotos()
-  }
-
-  setAttributes = async () => {
-    const {
-      history,
-    } = this.props
-
-    const {
-      selectedPhotos,
-      photos,
-    } = this.state
-
-    const photoPathes = (
-      Object.keys(selectedPhotos)
-        .filter((filename) => selectedPhotos[filename])
-        .map((filename) => {
-          const photo = photos.find((p) => p.filename === filename)
-          return `${photo.dirpath}/${photo.filename}`
-        }))
-
-    const query = qs.stringify({ photos: photoPathes })
-
-    history.push(`/photos/attribute?${query}`)
-  }
-
   onAddToExistingIncident = async () => {
     const {
       addPhotosToExistingIncident,
+      history,
     } = this.props
     const {
       selectedIncident,
+      evidence,
       selectedPhotos,
     } = this.state
 
@@ -121,26 +89,16 @@ class PhotoListPage extends React.Component {
       incidentId,
     } = selectedIncident
 
-    const filenames = Object.keys(selectedPhotos).filter((filename) => selectedPhotos[filename])
+    const filenames = evidence.photos.filter((photo) => selectedPhotos[photo.filename]).map((photo) => photo.filename)
 
     await addPhotosToExistingIncident(incidentId, filenames)
 
     await this.setState({
       showAddToExistingIncidentOverlay: false,
       selectedIncident: null,
-      selectedPhotos: {},
     })
 
-    await this.loadPhotos()
-  }
-
-  crawl = async () => {
-    const {
-      crawlPhotos,
-    } = this.props
-
-    await crawlPhotos()
-    await this.loadPhotos()
+    history.replace('/evidences')
   }
 
   searchIncidents = async (query) => {
@@ -167,7 +125,9 @@ class PhotoListPage extends React.Component {
   renderAddToExistingIncidentOverlay() {
     const {
       showAddToExistingIncidentOverlay,
-      photos,
+      evidence: {
+        photos,
+      },
       selectedPhotos,
       loadingIncidents,
       incidentOptions,
@@ -281,10 +241,10 @@ class PhotoListPage extends React.Component {
   renderPhotoOverlay() {
     const {
       showPhotoOverlay,
-      photos,
+      evidence,
     } = this.state
 
-    const photo = photos.find((p) => p.filename === showPhotoOverlay)
+    const photo = evidence?.photos?.find((p) => p.filename === showPhotoOverlay)
 
     if (!photo) {
       return null
@@ -320,17 +280,60 @@ class PhotoListPage extends React.Component {
     )
   }
 
+  createNewIncident = async () => {
+    const {
+      history,
+    } = this.props
+
+    const {
+      selectedPhotos,
+      evidence: {
+        evidenceId,
+        photos,
+      }
+    } = this.state
+
+    const photoPathes = (
+      Object.keys(selectedPhotos)
+        .filter((filename) => selectedPhotos[filename])
+        .map((filename) => {
+          const photo = photos.find((p) => p.filename === filename)
+          return `${photo.dirpath}/${photo.filename}`
+        }))
+
+    const query = qs.stringify({
+      evidenceId,
+      photos: photoPathes,
+    })
+
+    history.push(`/incidents/new?${query}`)
+  }
+
   render() {
     const {
-      photos,
+      evidence,
       selectedPhotos,
     } = this.state
 
-    if (!photos) {
+    if (!evidence) {
       return <div>Loading...</div>
     }
+
+    const {
+      photos,
+    } = evidence
+
     return (
       <div style={{ width: '100%' }}>
+        <h3>
+          {
+            evidence.locationDisplayName
+          }
+          <br />
+          {
+            evidence.vehicleRegistrationId
+          }
+        </h3>
         {
           photos.map((photo) => (
             <Card key={photo.filename} style={{  width: '18rem', float: 'left', padding: '1em' }}>
@@ -374,27 +377,26 @@ class PhotoListPage extends React.Component {
           right: '40px',
         }}>
           <Button
-            variant="secondary"
-            size="lg"
-            onClick={this.crawl}
-          >
-            Crawl
-          </Button>
-          <Button
             variant="danger"
-            size="lg"
             style={{ marginLeft: '1em'}}
             onClick={this.ignoreSelectedPhotos}
           >
             Ignore
           </Button>
           <Button
+            variant="primary"
+            style={{ marginLeft: '1em'}}
+            onClick={() => this.setState({ showAddToExistingIncidentOverlay: true })}
+          >
+            Add to existing Incident
+          </Button>
+          <Button
             variant="success"
             size="lg"
             style={{ marginLeft: '1em'}}
-            onClick={this.setAttributes}
+            onClick={this.createNewIncident}
           >
-            Set Attributes
+            Create Incident
           </Button>
         </div>
       </div>
@@ -407,11 +409,9 @@ const mapStateToProps = (state) => ({
 
 
 const mapDispatchToProps = (dispatch) => bindActionCreators({
-  getPendingPhotos: getPendingPhotosRequest,
-  setPhotosIgnored: setPhotosIgnoredRequest,
-  crawlPhotos: crawlPhotosRequest,
   searchIncidents: searchIncidentsRequest,
   addPhotosToExistingIncident: addPhotosToExistingIncidentRequest,
+  getEvidence: getEvidenceRequest,
 }, dispatch)
 
-export default connect(mapStateToProps, mapDispatchToProps)(PhotoListPage)
+export default connect(mapStateToProps, mapDispatchToProps)(EvidencePage)

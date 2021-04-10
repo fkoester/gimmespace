@@ -19,7 +19,6 @@ CREATE VIEW IncidentExtra AS
     location.displayName,
     location.description,
     incident.seenAt,
-    incident.seenUntil,
     incident.reportedAt,
     incident.comment,
     incident.valvePositionFrontLeft,
@@ -27,8 +26,6 @@ CREATE VIEW IncidentExtra AS
     incident.valvePositionRearLeft,
     incident.valvePositionRearRight,
     incident.ignoreIncident,
-    incident.reportedViaPhone,
-    incident.alreadyFined,
     violationType.violationTypeId,
     violationType.shortName,
     violationType.fullName

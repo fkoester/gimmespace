@@ -19,10 +19,16 @@ async function* walk(dir) {
   }
 }
 
-router.get('/', rejectionHandler(async (req) => {
-  return db.query('SELECT * FROM Photo WHERE incidentId IS NULL AND ignorePhoto = 0 ORDER BY timestamp ASC')
-}))
-
+router.get('/', rejectionHandler(async (req) => db.query(`
+    SELECT *
+    FROM Photo
+    WHERE (
+      incidentId IS NULL
+      AND locationId IS NULL
+      AND vehicleId IS NULL
+      AND ignorePhoto = 0
+    )
+    ORDER BY timestamp ASC`)))
 
 router.post('/cleanup', rejectionHandler(async (req) => {
   const photos = await db.query('SELECT * FROM Photo WHERE incidentId IS NULL AND ignorePhoto = 0 ORDER BY timestamp ASC')
@@ -124,6 +130,20 @@ router.put('/ignored', rejectionHandler(async (req) => {
   } finally {
     db.releaseConnection(dbConnection)
   }
+}))
+
+router.put('/attributes', rejectionHandler(async (req) => {
+  const {
+    filenames,
+    locationId,
+    vehicleId,
+  } = req.body
+
+  await db.query('UPDATE Photo SET locationId = ?, vehicleId = ? WHERE filename IN (?)', [
+    locationId,
+    vehicleId,
+    filenames,
+  ])
 }))
 
 export default router

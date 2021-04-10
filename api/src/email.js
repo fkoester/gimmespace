@@ -53,6 +53,32 @@ function licensePlateDisplay(incident) {
   return `[${countryCode}] ${vehicleRegistrationId}`
 }
 
+function getSeenAtHuman(incident) {
+  const seenAtDateTime = DateTime.fromISO(incident.seenAt.toISOString())
+  const seenUntilDateTime = DateTime.fromISO(incident.seenUntil.toISOString())
+
+  const seenAtHuman = seenAtDateTime.toLocaleString(DateTime.DATETIME_FULL)
+  const seenUntilHuman = seenUntilDateTime.toLocaleString(DateTime.DATETIME_FULL)
+
+  const duration = seenUntilDateTime.diff(seenAtDateTime)
+  const durationMinutes = Math.floor(duration.as('minutes'))
+
+  if (durationMinutes < 2) {
+    return seenAtHuman
+  }
+
+  if (durationMinutes > 60) {
+    const {
+      hours,
+      minutes,
+    } = duration.shiftTo('hours', 'minutes', 'seconds')
+
+    return `Von ${seenAtHuman} bis ${seenUntilHuman} (${hours} Stunde(n), ${minutes} Minute(n))`
+  }
+
+  return `Von ${seenAtHuman} bis ${seenUntilHuman} (${durationMinutes} Minuten)`
+}
+
 export async function generateIncidentReportEmail(incidentId) {
   const [incident] = await db.query('SELECT * FROM IncidentExtra WHERE incidentId = ?', [incidentId])
 
@@ -98,10 +124,7 @@ export async function generateIncidentReportEmail(incidentId) {
     locals: {
       incident: {
         ...incident,
-        seenAtHuman: (
-          DateTime.fromISO(incident.seenAt.toISOString())
-            .toLocaleString(DateTime.DATETIME_FULL)
-        ),
+        seenAtHuman: getSeenAtHuman(incident),
         licensePlate: licensePlateDisplay(incident),
         valvePositions,
       },

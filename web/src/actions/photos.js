@@ -43,6 +43,30 @@ export function setPhotosIgnoredRequest(filenames, ignored) {
   }
 }
 
+export function setPhotosAttributesRequest(filenames, locationId, vehicleId) {
+  return async (dispatch, getState) => {
+    try {
+      const response = await fetch(`http://localhost:62452/photos/attributes`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          filenames,
+          locationId,
+          vehicleId,
+        })
+      })
+
+      const body = await getResponseBody(response)
+      return body
+    } catch (error) {
+      dispatch(notificationError(error))
+    }
+    return []
+  }
+}
+
 export function crawlPhotosRequest(filenames, ignored) {
   return async (dispatch, getState) => {
     try {

@@ -191,6 +191,9 @@ router.post('/', rejectionHandler(async (req) => {
     valvePositionFrontRight,
     valvePositionRearLeft,
     valvePositionRearRight,
+    seenAt,
+    seenUntil,
+    comment,
   } = req.body || {}
 
   const dbConnection = await db.getConnection()
@@ -198,25 +201,16 @@ router.post('/', rejectionHandler(async (req) => {
   try {
     await dbConnection.query('START TRANSACTION')
 
-    const [firstPhoto] = await dbConnection.query(`
-      SELECT timestamp
-      FROM Photo
-      WHERE (
-        incidentId IS NULL
-        AND filename IN (?)
-      )
-      ORDER BY timestamp ASC
-      LIMIT 1`, [
-      photos,
-    ])
     await dbConnection.query('INSERT INTO Incident SET ?', [{
       vehicleId,
       locationId,
-      seenAt: firstPhoto.timestamp,
+      seenAt: DateTime.fromISO(seenAt).toSQL({ includeOffset: false }),
+      seenUntil: DateTime.fromISO(seenUntil).toSQL({ includeOffset: false }),
       valvePositionFrontLeft,
       valvePositionFrontRight,
       valvePositionRearLeft,
       valvePositionRearRight,
+      comment,
     }])
     const [{ incidentId }] = await dbConnection.query('SELECT LAST_INSERT_ID() AS incidentId')
     await dbConnection.query('INSERT INTO ViolationTypeIncident SET ?', [{

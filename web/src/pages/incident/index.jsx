@@ -7,10 +7,12 @@ import { Link } from 'react-router-dom'
 import { bindActionCreators } from 'redux'
 import {
   Button,
-  Table,
   Carousel,
-  Modal,
+  Col,
   Form,
+  Modal,
+  Row,
+  Table,
 } from 'react-bootstrap'
 import { DateTime } from 'luxon'
 import {
@@ -48,6 +50,9 @@ import {
 import {
   searchViolationTypesRequest,
 } from '../../actions/violationTypes'
+import {
+  getEvidenceRequest,
+} from '../../actions/evidences'
 import { renderValvePositions } from '../../utils'
 
 import 'leaflet/dist/leaflet.css';
@@ -81,12 +86,14 @@ class IncidentPage extends React.Component {
     searchVehicles: PropTypes.func.isRequired,
     searchLocations: PropTypes.func.isRequired,
     searchViolationTypes: PropTypes.func.isRequired,
+    getEvidence: PropTypes.func.isRequired,
   }
 
   constructor(props) {
     super(props)
     this.state = {
       incident: null,
+      evidence: null,
       preview: null,
       previousIncidentId: null,
       nextIncidentId: null,
@@ -98,6 +105,8 @@ class IncidentPage extends React.Component {
       loadingViolationTypes: false,
       violationTypeOptions: [],
       reportInProgress: false,
+      seenAt: null,
+      seenUntil: null,
     }
   }
 
@@ -127,6 +136,7 @@ class IncidentPage extends React.Component {
         search,
       },
       getIncident,
+      getEvidence,
     } = this.props
 
     if (incidentId === 'new') {
@@ -134,14 +144,24 @@ class IncidentPage extends React.Component {
 
       const filenames = Array.isArray(query.photos) ? query.photos : [query.photos]
 
+      const evidence = await getEvidence(query.evidenceId)
+
+      const selectedPhotos = evidence.photos.filter((photo) => filenames.includes(`${photo.dirpath}/${photo.filename}`))
+
+      const seenAt = selectedPhotos[0]?.timestamp
+      const seenUntil = selectedPhotos[selectedPhotos.length - 1]?.timestamp
+
       await this.setState({
         editing: true,
+        evidence,
         incident: {
           photos: filenames.map((p) => ({
             filename: path.basename(p),
             dirpath: path.dirname(p),
           }))
         },
+        seenAt,
+        seenUntil,
       })
       return
     }
@@ -237,24 +257,32 @@ class IncidentPage extends React.Component {
       incident: {
         photos,
       },
-      selectedVehicleId,
-      selectedLocationId,
+      evidence: {
+        vehicleId,
+        locationId,
+      },
       selectedViolationTypeId,
       valvePositionFrontLeft,
       valvePositionFrontRight,
       valvePositionRearLeft,
       valvePositionRearRight,
+      seenAt,
+      seenUntil,
+      comment,
     } = this.state
 
-    const { incidentId } = await createIncident({
-      vehicleId: selectedVehicleId,
-      locationId: selectedLocationId,
+    await createIncident({
+      vehicleId,
+      locationId,
       violationTypeId: selectedViolationTypeId,
       photos: photos.map((photo) => photo.filename),
       valvePositionFrontLeft,
       valvePositionFrontRight,
       valvePositionRearLeft,
       valvePositionRearRight,
+      seenAt: DateTime.fromISO(seenAt).toISO(),
+      seenUntil: DateTime.fromISO(seenUntil).toISO(),
+      comment,
     })
 
     await this.setState({
@@ -262,7 +290,7 @@ class IncidentPage extends React.Component {
     })
 
     // history.push(`/incidents/${incidentId}`)
-    history.push('/photos')
+    history.push('/evidences')
   }
 
   showIncidentReportPreview = async () => {
@@ -413,6 +441,41 @@ class IncidentPage extends React.Component {
     }
   }
 
+  onChangeTime = async (field, timeString) => {
+    const {
+      [field]: value,
+    } = this.state
+
+    const dateTime = DateTime.fromISO(value).set({
+      hour: timeString.split(':')[0],
+      minute: timeString.split(':')[1],
+    })
+
+    const update = {
+      [field]: dateTime.toISO(),
+    }
+
+    await this.setState(update)
+  }
+
+  onChangeDate = async (field, dateString) => {
+    const {
+      [field]: value,
+    } = this.state
+
+    const dateTime = DateTime.fromISO(value).set({
+      year: parseInt(dateString.split('-')[0], 10),
+      month: parseInt(dateString.split('-')[1], 10),
+      day: parseInt(dateString.split('-')[2], 10),
+    })
+
+    const update = {
+      [field]: dateTime.toISO(),
+    }
+
+    await this.setState(update)
+  }
+
   renderEmailPreviewOverlay() {
     const {
       preview,
@@ -498,110 +561,130 @@ class IncidentPage extends React.Component {
   renderIncidentMetadata() {
     const {
       incident,
+      evidence,
       editing,
-      loadingVehicles,
-      vehicleOptions,
-      loadingLocations,
-      locationOptions,
       loadingViolationTypes,
       violationTypeOptions,
+      seenAt,
+      seenUntil,
     } = this.state
 
     if (editing) {
       return (
-        <Form>
-          <Form.Group>
-            <Form.Label>Fahrzeug</Form.Label>
-            <AsyncTypeahead
-              id="vehicleField"
-              filterBy={() => true}
-              placeholder="Kennzeichen"
-              isLoading={loadingVehicles}
-              useCache={false}
-              labelKey={({
-                vehicleRegistrationId,
-                vehicleBrandId,
-                vehicleColorId,
-              }) => `${vehicleRegistrationId} (${vehicleBrandId} ${vehicleColorId})`}
-              minLength={2}
-              onSearch={this.searchVehicles}
-              options={vehicleOptions}
-              onChange={(selections) => this.setState({
-                selectedVehicleId: selections[0]?.vehicleId
-              })}
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Ort</Form.Label>
-            <AsyncTypeahead
-              id="locationField"
-              filterBy={() => true}
-              placeholder="Suchen..."
-              isLoading={loadingLocations}
-              useCache={false}
-              labelKey="displayName"
-              minLength={3}
-              onSearch={this.searchLocations}
-              options={locationOptions}
-              onChange={(selections) => this.setState({
-                selectedLocationId: selections[0]?.locationId
-              })}
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Ordnungswidrigkeit</Form.Label>
-            <AsyncTypeahead
-              id="violationTypeField"
-              filterBy={() => true}
-              placeholder="Suchen..."
-              isLoading={loadingViolationTypes}
-              useCache={false}
-              labelKey="shortName"
-              minLength={3}
-              onSearch={this.searchViolationTypes}
-              options={violationTypeOptions}
-              onChange={(selections) => this.setState({
-                selectedViolationTypeId: selections[0]?.violationTypeId
-              })}
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Ventil vorne links</Form.Label>
-            <Form.Control
-              type="number"
-              min="0"
-              max="11"
-              onChange={(event) => this.setState({ valvePositionFrontLeft: parseInt(event.target.value, 10) })}
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Ventil vorne rechts</Form.Label>
-            <Form.Control
-              type="number"
-              min="0"
-              max="11"
-              onChange={(event) => this.setState({ valvePositionFrontRight: parseInt(event.target.value, 10) })}
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Ventil hinten links</Form.Label>
-            <Form.Control
-              type="number"
-              min="0"
-              max="11"
-              onChange={(event) => this.setState({ valvePositionRearLeft: parseInt(event.target.value, 10) })}
-            />
-          </Form.Group>
-          <Form.Group>
-            <Form.Label>Ventil hinten rechts</Form.Label>
-            <Form.Control
-              type="number"
-              min="0"
-              max="11"
-              onChange={(event) => this.setState({ valvePositionRearRight: parseInt(event.target.value, 10) })}
-            />
-          </Form.Group>
-        </Form>
+        <>
+          <Table bordered>
+            <tbody>
+              <tr>
+                <th>Ort</th>
+                <td>{ evidence.locationDisplayName }</td>
+              </tr>
+              <tr>
+                <th>Fahrzeug</th>
+                <td>{ evidence.vehicleRegistrationId } { evidence.vehicleBrandId } { evidence.vehicleColorId }</td>
+              </tr>
+            </tbody>
+          </Table>
+          <Form>
+            <Form.Group>
+              <Form.Label>Gesehen von</Form.Label>
+              <Row>
+                <Col>
+                  <Form.Control
+                    type="date"
+                    value={DateTime.fromISO(seenAt).toISODate()}
+                    onChange={(event) => this.onChangeDate('seenAt', event.target.value)}
+                  />
+                </Col>
+                <Col>
+                  <Form.Control
+                    type="time"
+                    value={DateTime.fromISO(seenAt).toLocaleString(DateTime.TIME_SIMPLE)}
+                    onChange={(event) => this.onChangeTime('seenAt', event.target.value)}
+                  />
+                </Col>
+              </Row>
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Gesehen bis</Form.Label>
+              <Row>
+                <Col>
+                  <Form.Control
+                    type="date"
+                    value={DateTime.fromISO(seenUntil).toISODate()}
+                    onChange={(event) => this.onChangeDate('seenUntil', event.target.value)}
+                  />
+                </Col>
+                <Col>
+                  <Form.Control
+                    type="time"
+                    value={DateTime.fromISO(seenUntil).toLocaleString(DateTime.TIME_SIMPLE)}
+                    onChange={(event) => this.onChangeTime('seenUntil', event.target.value)}
+                  />
+                </Col>
+              </Row>
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Ordnungswidrigkeit</Form.Label>
+              <AsyncTypeahead
+                id="violationTypeField"
+                filterBy={() => true}
+                placeholder="Suchen..."
+                isLoading={loadingViolationTypes}
+                useCache={false}
+                labelKey="shortName"
+                minLength={3}
+                onSearch={this.searchViolationTypes}
+                options={violationTypeOptions}
+                onChange={(selections) => this.setState({
+                  selectedViolationTypeId: selections[0]?.violationTypeId
+                })}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Ventil vorne links</Form.Label>
+              <Form.Control
+                type="number"
+                min="0"
+                max="11"
+                onChange={(event) => this.setState({ valvePositionFrontLeft: parseInt(event.target.value, 10) })}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Ventil vorne rechts</Form.Label>
+              <Form.Control
+                type="number"
+                min="0"
+                max="11"
+                onChange={(event) => this.setState({ valvePositionFrontRight: parseInt(event.target.value, 10) })}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Ventil hinten links</Form.Label>
+              <Form.Control
+                type="number"
+                min="0"
+                max="11"
+                onChange={(event) => this.setState({ valvePositionRearLeft: parseInt(event.target.value, 10) })}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Ventil hinten rechts</Form.Label>
+              <Form.Control
+                type="number"
+                min="0"
+                max="11"
+                onChange={(event) => this.setState({ valvePositionRearRight: parseInt(event.target.value, 10) })}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Kommentar</Form.Label>
+              <Form.Control
+                as="textarea"
+                onChange={(event) => this.setState({ comment: event.target.value })}
+              />
+            </Form.Group>
+          </Form>
+        </>
       )
     }
 
@@ -609,8 +692,12 @@ class IncidentPage extends React.Component {
       <Table bordered>
         <tbody>
           <tr>
-            <th>Gesehen</th>
+            <th>Gesehen von</th>
             <td>{ DateTime.fromISO(incident.seenAt).toLocaleString(DateTime.DATETIME_FULL) }</td>
+          </tr>
+          <tr>
+            <th>Gesehen bis</th>
+            <td>{ DateTime.fromISO(incident.seenUntil).toLocaleString(DateTime.DATETIME_FULL) }</td>
           </tr>
           <tr>
             <th>Ort</th>
@@ -844,6 +931,7 @@ const mapDispatchToProps = (dispatch) => bindActionCreators({
   searchLocations: searchLocationsRequest,
   searchViolationTypes: searchViolationTypesRequest,
   createIncident: createIncidentRequest,
+  getEvidence: getEvidenceRequest,
 }, dispatch)
 
 export default connect(mapStateToProps, mapDispatchToProps)(IncidentPage)

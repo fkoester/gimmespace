@@ -1,0 +1,31 @@
+.wrapper {
+    width: 100%;
+    display: grid;
+    grid-template-columns: [photos] 1fr [metadata] minmax(40vh, min-content) [end];
+    grid-template-rows: [metadata] 1fr [map] min-content [end];
+    grid-column-gap: 1em;
+    grid-row-gap: 0.3em;
+    padding: 1em;
+}
+
+.photos {
+    grid-column-start: photos;
+    grid-row-start: metadata;
+    grid-row-end: span 2;
+    align-self: center;
+}
+
+.metadata {
+    grid-column-start: metadata;
+    grid-row-start: metadata;
+    align-self: start;
+}
+
+.map {
+    grid-column-start: metadata;
+    grid-row-start: map;
+}
+
+.actions button {
+    margin-right: 1em;
+}

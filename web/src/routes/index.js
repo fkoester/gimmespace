@@ -9,10 +9,12 @@ import PhotoListPage from '../pages/photo-list'
 import VehiclePage from '../pages/vehicle'
 import LocationPage from '../pages/location'
 import PhotoAttributePage from '../pages/photo-attribute'
+import DashboardPage from '../pages/dashboard'
 
 const routes = (history) => (
   <Router history={history}>
     <Switch>
+    <Route exact path="/" component={DashboardPage} />
       <Route exact path="/incidents/" component={IncidentListPage} />
       <Route path="/incidents/:incidentId" component={IncidentPage} />
       <Route exact path="/evidences/" component={EvidenceListPage} />
